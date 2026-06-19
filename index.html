@@ -50,32 +50,41 @@
   h1       { font-size: clamp(20px, 4vw, 34px); font-weight: 700; letter-spacing: -.02em; margin-bottom: 6px; }
   .sub     { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
 
-  /* ── Status bar ── */
-  #sbar {
+  /* ── Focus card ── */
+  #fcard-wrap {
+    border-bottom: 1px solid var(--bd);
+    padding: 10px 1rem;
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 7px 1rem;
+    align-items: center;
+    gap: 10px;
     font-size: 12px;
     color: var(--muted);
-    border-bottom: 1px solid var(--bd);
   }
-  #jumpbtn {
+  #stime-wrap { white-space: nowrap; }
+  #fcard {
     display: none;
-    background: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
     border: 1px solid var(--bd2);
-    color: var(--muted);
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: var(--r);
+    padding: 7px 14px;
     cursor: pointer;
-    font-family: inherit;
+    transition: border-color .15s, background .15s;
+    font-size: 13px;
+    color: var(--text);
+    text-align: center;
   }
-  #jumpbtn:hover    { border-color: var(--accent); color: var(--text); }
-  .slive-active { color: var(--lv-c); font-weight: 600; }
-  #jumpbtn.is-live  { color: var(--lv-c); border-color: var(--lv-bd); }
+  #fcard:hover { border-color: var(--accent); background: var(--surf2); }
+  #fcard.is-live { border-color: var(--lv-bd); }
+  #fcard.is-live:hover { border-color: var(--lv-c); }
+  #fcard.is-fr  { border-color: var(--fr-bd); }
+  .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  #fcard.is-live .fc-label { color: var(--lv-c); }
+  .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .fc-score { font-size: 15px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.07); padding: 1px 8px; border-radius: 4px; }
+  .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; }
 
   /* ── Layout ── */
   main { max-width: 840px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
@@ -136,6 +145,7 @@
   .row.fr .teams { color: #c8d8ff; }
   .sep         { color: var(--muted); }
   .group       { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .venue       { font-size: 11px; color: var(--muted); font-style: italic; opacity: .7; }
 
   /* Flag icons — sizing uniquement dans les lignes de match */
   .teams .fi { font-size: 1.1em; vertical-align: -0.1em; border-radius: 2px; }
@@ -203,11 +213,9 @@
   <p class="sub">11 juin — 19 juillet &middot; États-Unis, Canada, Mexique</p>
 </header>
 
-<div id="sbar">
-  <span id="stime"></span>
-  <span>&middot;</span>
-  <span id="slive"></span>
-  <button id="jumpbtn" onclick="jumpToActive()">↓ Aller au match</button>
+<div id="fcard-wrap">
+  <span id="stime-wrap"></span>
+  <div id="fcard" onclick="jumpToActive()" role="button" tabindex="0"></div>
 </div>
 
 <main>
@@ -303,35 +311,35 @@ const MATCHES = [
   {utc:"2026-06-28T02:00Z",t:"4h",   m:"Algérie - Autriche",                g:"Groupe J",       tv:"bein"},
   {utc:"2026-06-28T02:00Z",t:"4h",   m:"Jordanie - Argentine",              g:"Groupe J",       tv:"bein"},
   // Phases finales — noms à confirmer selon le tableau
-  {utc:"2026-06-28T19:00Z",t:"21h",  m:"16e #1",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-28T22:00Z",t:"0h",   m:"16e #2",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-29T20:30Z",t:"22h30",m:"16e #3",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-29T22:00Z",t:"0h",   m:"16e #4",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-30T02:00Z",t:"4h",   m:"16e #5",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-30T21:00Z",t:"23h",  m:"16e #6",            g:"16e de finale",  tv:"m6",   ph:"ko", frIf:["1I"]},
-  {utc:"2026-07-01T03:00Z",t:"5h",   m:"16e #7",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-01T16:00Z",t:"18h",  m:"16e #8",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-01T23:00Z",t:"1h",   m:"16e #9",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-02T19:00Z",t:"21h",  m:"16e #10",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-03T19:00Z",t:"21h",  m:"16e #11",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-03T23:00Z",t:"1h",   m:"16e #12",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-04T03:00Z",t:"5h",   m:"16e #13",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-05T18:00Z",t:"20h",  m:"16e #14",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-05T22:00Z",t:"0h",   m:"16e #15",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-06T19:00Z",t:"21h",  m:"16e #16",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-06T23:00Z",t:"1h",   m:"16e #17",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-08T19:00Z",t:"21h",  m:"8e #1",             g:"8e de finale",   tv:"m6",   ph:"ko", frIf:["1I"]},
-  {utc:"2026-07-09T01:00Z",t:"3h",   m:"8e #2",             g:"8e de finale",   tv:"m6",   ph:"ko"},
-  {utc:"2026-07-09T19:00Z",t:"21h",  m:"8e #3",             g:"8e de finale",   tv:"m6",   ph:"ko"},
-  {utc:"2026-07-10T01:00Z",t:"3h",   m:"8e #4",             g:"8e de finale",   tv:"m6",   ph:"ko"},
-  {utc:"2026-07-12T19:00Z",t:"21h",  m:"Quart #1",          g:"Quart de finale",tv:"m6",   ph:"ko"},
-  {utc:"2026-07-13T01:00Z",t:"3h",   m:"Quart #2",          g:"Quart de finale",tv:"m6",   ph:"ko"},
-  {utc:"2026-07-13T19:00Z",t:"21h",  m:"Quart #3",          g:"Quart de finale",tv:"m6",   ph:"ko"},
-  {utc:"2026-07-14T01:00Z",t:"3h",   m:"Quart #4",          g:"Quart de finale",tv:"m6",   ph:"ko"},
-  {utc:"2026-07-15T19:00Z",t:"21h",  m:"Demi #1",           g:"Demi-finale",    tv:"m6",   ph:"ko"},
-  {utc:"2026-07-16T19:00Z",t:"21h",  m:"Demi #2",           g:"Demi-finale",    tv:"m6",   ph:"ko"},
-  {utc:"2026-07-18T19:00Z",t:"21h",  m:"Petite finale",     g:"Petite finale",  tv:"m6",   ph:"ko"},
-  {utc:"2026-07-19T19:00Z",t:"21h",  m:"Finale",            g:"Finale",         tv:"m6",   ph:"ko", final:1},
+  {utc:"2026-06-28T19:00Z",t:"21h",  m:"16e #1",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Kansas City - Arrowhead Stadium"},
+  {utc:"2026-06-28T22:00Z",t:"0h",   m:"16e #2",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Los Angeles - SoFi Stadium"},
+  {utc:"2026-06-29T20:30Z",t:"22h30",m:"16e #3",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Dallas - AT&T Stadium"},
+  {utc:"2026-06-29T22:00Z",t:"0h",   m:"16e #4",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Miami - Hard Rock Stadium"},
+  {utc:"2026-06-30T02:00Z",t:"4h",   m:"16e #5",            g:"16e de finale",  tv:"bein", ph:"ko", v:"San Francisco - Levi's Stadium"},
+  {utc:"2026-06-30T21:00Z",t:"23h",  m:"16e #6",            g:"16e de finale",  tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       frIf:["1I"]},
+  {utc:"2026-07-01T03:00Z",t:"5h",   m:"16e #7",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Seattle - Lumen Field"},
+  {utc:"2026-07-01T16:00Z",t:"18h",  m:"16e #8",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Boston - Gillette Stadium"},
+  {utc:"2026-07-01T23:00Z",t:"1h",   m:"16e #9",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Guadalajara - Estadio Akron"},
+  {utc:"2026-07-02T19:00Z",t:"21h",  m:"16e #10",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Monterrey - Estadio BBVA"},
+  {utc:"2026-07-03T19:00Z",t:"21h",  m:"16e #11",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Vancouver - BC Place"},
+  {utc:"2026-07-03T23:00Z",t:"1h",   m:"16e #12",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Atlanta - Mercedes-Benz Stadium"},
+  {utc:"2026-07-04T03:00Z",t:"5h",   m:"16e #13",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Mexico City - Estadio Azteca"},
+  {utc:"2026-07-05T18:00Z",t:"20h",  m:"16e #14",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Philadelphie - Lincoln Financial Field"},
+  {utc:"2026-07-05T22:00Z",t:"0h",   m:"16e #15",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Toronto - BMO Field"},
+  {utc:"2026-07-06T19:00Z",t:"21h",  m:"16e #16",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Los Angeles - Rose Bowl"},
+  {utc:"2026-07-06T23:00Z",t:"1h",   m:"16e #17",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Montréal - Stade Olympique"},
+  {utc:"2026-07-08T19:00Z",t:"21h",  m:"8e #1",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       frIf:["1I"]},
+  {utc:"2026-07-09T01:00Z",t:"3h",   m:"8e #2",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"Dallas - AT&T Stadium"},
+  {utc:"2026-07-09T19:00Z",t:"21h",  m:"8e #3",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"Los Angeles - SoFi Stadium"},
+  {utc:"2026-07-10T01:00Z",t:"3h",   m:"8e #4",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"Miami - Hard Rock Stadium"},
+  {utc:"2026-07-12T19:00Z",t:"21h",  m:"Quart #1",          g:"Quart de finale",tv:"m6",   ph:"ko", v:"Kansas City - Arrowhead Stadium"},
+  {utc:"2026-07-13T01:00Z",t:"3h",   m:"Quart #2",          g:"Quart de finale",tv:"m6",   ph:"ko", v:"Los Angeles - Rose Bowl"},
+  {utc:"2026-07-13T19:00Z",t:"21h",  m:"Quart #3",          g:"Quart de finale",tv:"m6",   ph:"ko", v:"Dallas - AT&T Stadium"},
+  {utc:"2026-07-14T01:00Z",t:"3h",   m:"Quart #4",          g:"Quart de finale",tv:"m6",   ph:"ko", v:"San Francisco - Levi's Stadium"},
+  {utc:"2026-07-15T19:00Z",t:"21h",  m:"Demi #1",           g:"Demi-finale",    tv:"m6",   ph:"ko", v:"Atlanta - Mercedes-Benz Stadium"},
+  {utc:"2026-07-16T19:00Z",t:"21h",  m:"Demi #2",           g:"Demi-finale",    tv:"m6",   ph:"ko", v:"Dallas - AT&T Stadium"},
+  {utc:"2026-07-18T19:00Z",t:"21h",  m:"Petite finale",     g:"Petite finale",  tv:"m6",   ph:"ko", v:"Miami - Hard Rock Stadium"},
+  {utc:"2026-07-19T19:00Z",t:"21h",  m:"Finale",            g:"Finale",         tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       final:1},
 ];
 
 // ── Drapeaux ────────────────────────────────────────────────────────────────
@@ -623,6 +631,7 @@ function render() {
       <div class="match-info">
         <div class="teams">${matchHtml(x.m)}${sc}</div>
         <div class="group">${x.g}</div>
+        ${x.v ? `<div class="venue">${x.v}</div>` : ''}
       </div>
       ${channelBadge(x)}
     </div>`;
@@ -633,36 +642,46 @@ function render() {
   updateStatusBar(next);
 }
 
-// ── Barre de statut ────────────────────────────────────────────────────────
+// ── Focus card ─────────────────────────────────────────────────────────────
 function updateStatusBar(next) {
-  const hm   = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const live = MATCHES.filter(x => matchState(x) === 'live');
-  const jb   = document.getElementById('jumpbtn');
-  const sl   = document.getElementById('slive');
+  const hm    = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const card  = document.getElementById('fcard');
+  const live  = MATCHES.filter(x => matchState(x) === 'live' || matchState(x) === 'ht');
+  const focus = live[0] || MATCHES.find(x => x.utc === next);
 
-  document.getElementById('stime').textContent = hm;
+  document.getElementById('stime-wrap').textContent = hm;
 
-  if (live.length) {
-    sl.innerHTML = `<span class="slive-active">⬤ ${live.length} match${live.length > 1 ? 's' : ''} en cours</span>`;
-    jb.textContent   = live.length > 1 ? '↓ Matchs en cours' : '↓ Match en cours';
-    jb.className     = 'is-live';
-    jb.style.display = 'inline-block';
-  } else if (next) {
-    const nxt = MATCHES.find(x => x.utc === next);
-    sl.innerHTML     = `Prochain : ${matchHtml(nxt.m)} à ${nxt.t}`;
-    jb.textContent   = '↓ Prochain match';
-    jb.className     = '';
-    jb.style.display = 'inline-block';
-  } else {
-    sl.textContent   = 'Tournoi terminé';
-    jb.style.display = 'none';
+  if (!focus) {
+    card.style.display = 'none';
+    return;
   }
+
+  const isLive = live.length > 0;
+  const s      = scoreMap[utcKey(focus.utc)];
+
+  let labelHtml, scoreHtml = '', minHtml = '';
+  if (isLive) {
+    const count = live.length;
+    labelHtml = `⬤ ${count > 1 ? count + ' matchs en cours' : 'En cours'}`;
+    if (s && s.hs !== null) scoreHtml = `<span class="fc-score">${s.hs} – ${s.as}</span>`;
+    const min = s?.min || (s?.st === 'ht' ? 'Mi-temps' : '');
+    if (min) minHtml = `<span class="fc-min">${min}</span>`;
+  } else {
+    labelHtml = `▶ Prochain · ${focus.t}`;
+  }
+
+  card.className = isLive ? 'is-live' + (focus.fr ? ' is-fr' : '') : (focus.fr ? 'is-fr' : '');
+  card.style.display = 'flex';
+  card.innerHTML = `
+    <div class="fc-label">${labelHtml}</div>
+    <div class="fc-teams">${matchHtml(focus.m)}${scoreHtml}${minHtml}</div>
+  `;
 }
 
 // ── Jump vers le match actif ───────────────────────────────────────────────
 function jumpToActive() {
   const next   = nextMatchUtc();
-  const target = MATCHES.find(x => matchState(x) === 'live') || MATCHES.find(x => x.utc === next);
+  const target = MATCHES.find(x => { const s = matchState(x); return s === 'live' || s === 'ht'; }) || MATCHES.find(x => x.utc === next);
   if (!target) return;
 
   if (!document.querySelector(`[data-utc="${target.utc}"]`)) {
