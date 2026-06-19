@@ -80,9 +80,9 @@
   #fcard.is-live { border-color: var(--lv-bd); }
   #fcard.is-live:hover { border-color: var(--lv-c); }
   #fcard.is-fr  { border-color: var(--fr-bd); }
-  .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); line-height: 1; }
+  .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   #fcard.is-live .fc-label { color: var(--lv-c); }
-  .fc-teams { font-weight: 600; line-height: 1; }
+  .fc-teams { font-weight: 600; }
   .fc-teams .fi { font-size: 1em; border-radius: 2px; vertical-align: middle; }
   .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; vertical-align: middle; }
 
@@ -379,7 +379,7 @@ function matchHtml(str, score) {
   const sep = score
     ? `<span class="sep score-mid">${score}</span>`
     : `<span class="sep">-</span>`;
-  return `${teamHtml(a)}${sep}${teamHtml(b)}`;
+  return `${teamHtml(a)} ${sep} ${teamHtml(b)}`;
 }
 
 // Affiche "EquipeA [score] EquipeB" si score dispo, sinon "EquipeA - EquipeB"
@@ -689,7 +689,7 @@ function updateStatusBar(next) {
 
   card.className = isLive ? 'is-live' + (focus.fr ? ' is-fr' : '') : (focus.fr ? 'is-fr' : '');
   card.style.display = 'flex';
-  card.innerHTML = `<span class="fc-label">${labelHtml}</span><span class="fc-teams">${matchHtml(focus.m, fcScore)}${minHtml}</span>`;
+  card.innerHTML = `<span class="fc-label">${labelHtml}</span><span class="fc-teams">${matchHtml(focus.m, fcScore)}${minHtml ? ' ' + minHtml : ''}</span>`;
 }
 
 // ── Jump vers le match actif ───────────────────────────────────────────────
