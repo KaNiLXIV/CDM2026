@@ -82,9 +82,9 @@
   #fcard.is-fr  { border-color: var(--fr-bd); }
   .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   #fcard.is-live .fc-label { color: var(--lv-c); }
-  .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 6px; line-height: 1; }
-  .fc-teams .fi { font-size: 1em; border-radius: 2px; vertical-align: middle; }
-  .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; line-height: 1; }
+  .fc-teams { font-weight: 600; }
+  .fc-teams .fi { font-size: 1em; border-radius: 2px; }
+  .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; }
 
   /* ── Layout ── */
   main { max-width: 840px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
@@ -689,10 +689,7 @@ function updateStatusBar(next) {
 
   card.className = isLive ? 'is-live' + (focus.fr ? ' is-fr' : '') : (focus.fr ? 'is-fr' : '');
   card.style.display = 'flex';
-  card.innerHTML = `
-    <div class="fc-label">${labelHtml}</div>
-    <div class="fc-teams">${matchHtml(focus.m, fcScore)}${minHtml}</div>
-  `;
+  card.innerHTML = `<span class="fc-label">${labelHtml}</span><span class="fc-teams">${matchHtml(focus.m, fcScore)}${minHtml}</span>`;
 }
 
 // ── Jump vers le match actif ───────────────────────────────────────────────
