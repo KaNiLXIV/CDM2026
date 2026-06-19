@@ -548,8 +548,8 @@ function renderStandings() {
 // Priorité : données ESPN si disponibles, sinon détection locale par horloge
 function matchState(m) {
   const s = scoreMap[utcKey(m.utc)];
-  if (s && s.st !== 'sched') return s.st;
-  // Fallback local
+  if (s) return s.st; // ESPN disponible → statut autoritatif
+  // Fallback local — uniquement si ESPN n'a pas encore de données pour ce match
   const now     = Date.now();
   const ko      = new Date(m.utc).getTime();
   const dur     = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
