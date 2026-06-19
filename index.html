@@ -135,7 +135,6 @@
   .row.fr .teams { color: #c8d8ff; }
   .sep         { color: var(--muted); }
   .group       { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .note        { font-size: 11px; color: var(--m6-tx); }
 
   /* Flag icons — sizing uniquement dans les lignes de match */
   .teams .fi { font-size: 1.1em; vertical-align: -0.1em; border-radius: 2px; }
@@ -228,7 +227,7 @@
 // ── Données ────────────────────────────────────────────────────────────────
 // utc = coup d'envoi UTC · t = heure FR · m = équipes · g = groupe/phase
 // tv = "m6"|"bein" · ph:"ko" sur phases finales uniquement
-// fr:1 = match France · final:1 = finale · note = mention optionnelle
+// fr:1 = match France · frIf:['1I',...] = match France conditionnel (mis à jour dynamiquement) · final:1 = finale
 const MATCHES = [
   {utc:"2026-06-11T19:00Z",t:"21h",  m:"Mexique - Afrique du Sud",          g:"Groupe A",       tv:"m6"},
   {utc:"2026-06-12T02:00Z",t:"4h",   m:"Corée du Sud - Rép. tchèque",       g:"Groupe A",       tv:"bein"},
@@ -308,7 +307,7 @@ const MATCHES = [
   {utc:"2026-06-29T20:30Z",t:"22h30",m:"16e #3",            g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-06-29T22:00Z",t:"0h",   m:"16e #4",            g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-06-30T02:00Z",t:"4h",   m:"16e #5",            g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-06-30T21:00Z",t:"23h",  m:"16e #6",            g:"16e de finale",  tv:"m6",   ph:"ko", note:"France si qualifiée"},
+  {utc:"2026-06-30T21:00Z",t:"23h",  m:"16e #6",            g:"16e de finale",  tv:"m6",   ph:"ko", frIf:["1I"]},
   {utc:"2026-07-01T03:00Z",t:"5h",   m:"16e #7",            g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-07-01T16:00Z",t:"18h",  m:"16e #8",            g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-07-01T23:00Z",t:"1h",   m:"16e #9",            g:"16e de finale",  tv:"bein", ph:"ko"},
@@ -320,7 +319,7 @@ const MATCHES = [
   {utc:"2026-07-05T22:00Z",t:"0h",   m:"16e #15",           g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-07-06T19:00Z",t:"21h",  m:"16e #16",           g:"16e de finale",  tv:"bein", ph:"ko"},
   {utc:"2026-07-06T23:00Z",t:"1h",   m:"16e #17",           g:"16e de finale",  tv:"bein", ph:"ko"},
-  {utc:"2026-07-08T19:00Z",t:"21h",  m:"8e #1",             g:"8e de finale",   tv:"m6",   ph:"ko", note:"Dont France si qualifiée"},
+  {utc:"2026-07-08T19:00Z",t:"21h",  m:"8e #1",             g:"8e de finale",   tv:"m6",   ph:"ko", frIf:["1I"]},
   {utc:"2026-07-09T01:00Z",t:"3h",   m:"8e #2",             g:"8e de finale",   tv:"m6",   ph:"ko"},
   {utc:"2026-07-09T19:00Z",t:"21h",  m:"8e #3",             g:"8e de finale",   tv:"m6",   ph:"ko"},
   {utc:"2026-07-10T01:00Z",t:"3h",   m:"8e #4",             g:"8e de finale",   tv:"m6",   ph:"ko"},
@@ -619,13 +618,12 @@ function render() {
     html += `<div class="day-group"><div class="day-label">${label}</div>`;
     matches.forEach(x => {
       const st    = matchState(x);
-      const note  = x.note ? `<span class="note">(${x.note})</span>` : '';
       const score = scoreLabel(x);
       const sc    = score ? ` <span class="score-ft">${score}</span>` : '';
       html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
         ${timeCell(st, x, next)}
         <div class="match-info">
-          <div class="teams">${matchHtml(x.m)}${sc}${note}</div>
+          <div class="teams">${matchHtml(x.m)}${sc}</div>
           <div class="group">${x.g}</div>
         </div>
         ${channelBadge(x)}
@@ -680,9 +678,34 @@ function jumpToActive() {
   }, 50);
 }
 
+// ── Position France en phase de groupes ────────────────────────────────────
+// Retourne ex. '1I', '2I', '3I', ou null si groupe pas terminé
+function computeFrancePos() {
+  const groups = computeStandings();
+  const g = groups['Groupe I'];
+  if (!g) return null;
+  const rows = Object.entries(g)
+    .map(([name, s]) => ({ name, played: s.played, pts: s.w*3+s.d, gd: s.gf-s.ga, gf: s.gf }))
+    .sort((a, b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.name.localeCompare(b.name));
+  const allDone = rows.every(r => r.played === 3);
+  if (!allDone) return null;
+  const idx = rows.findIndex(r => r.name === 'France');
+  return idx >= 0 ? `${idx+1}I` : null;
+}
+
+// Met à jour le flag fr sur les matchs KO selon la position réelle de la France
+function updateFranceKoFlags() {
+  const pos = computeFrancePos();
+  MATCHES.forEach(m => {
+    if (!m.frIf) return;
+    m.fr = pos && m.frIf.includes(pos) ? 1 : 0;
+  });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 async function refresh() {
   await fetchScores();
+  updateFranceKoFlags();
   render();
   renderStandings();
   // Refresh plus fréquent si match(s) en cours
