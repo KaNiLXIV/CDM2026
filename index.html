@@ -83,7 +83,6 @@
   .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   #fcard.is-live .fc-label { color: var(--lv-c); }
   .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 6px; }
-  .fc-score { font-size: 15px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.07); padding: 1px 8px; border-radius: 4px; }
   .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; }
 
   /* ── Layout ── */
@@ -155,7 +154,6 @@
   .badge-m6   { background: var(--m6-bg); color: var(--m6-tx); }
   .badge-fin  { background: rgba(240,192,64,.15); color: var(--gold); }
 
-  .score-ft  { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; }
   .score-mid { font-size: 13px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.09); padding: 1px 7px; border-radius: 4px; }
 
   /* ── Standings ── */
@@ -236,99 +234,99 @@
 <script>
 // ── Données ────────────────────────────────────────────────────────────────
 // utc = coup d'envoi UTC · t = heure FR · m = équipes · g = groupe/phase
-// tv = "m6"|"bein" · ph:"ko" sur phases finales uniquement
+// tv = "m6" (affiché en clair) · ph:"ko" sur phases finales uniquement
 // fr:1 = match France · frIf:['1I',...] = match France conditionnel (mis à jour dynamiquement) · final:1 = finale
 const MATCHES = [
   {utc:"2026-06-11T19:00Z",t:"21h",  m:"Mexique - Afrique du Sud",          g:"Groupe A",       tv:"m6"},
-  {utc:"2026-06-12T02:00Z",t:"4h",   m:"Corée du Sud - Rép. tchèque",       g:"Groupe A",       tv:"bein"},
+  {utc:"2026-06-12T02:00Z",t:"4h",   m:"Corée du Sud - Rép. tchèque",       g:"Groupe A"},
   {utc:"2026-06-12T19:00Z",t:"21h",  m:"Canada - Bosnie-Herzégovine",       g:"Groupe B",       tv:"m6"},
-  {utc:"2026-06-13T01:00Z",t:"3h",   m:"États-Unis - Paraguay",             g:"Groupe D",       tv:"bein"},
+  {utc:"2026-06-13T01:00Z",t:"3h",   m:"États-Unis - Paraguay",             g:"Groupe D"},
   {utc:"2026-06-13T19:00Z",t:"21h",  m:"Qatar - Suisse",                    g:"Groupe B",       tv:"m6"},
   {utc:"2026-06-13T22:00Z",t:"0h",   m:"Brésil - Maroc",                    g:"Groupe C",       tv:"m6"},
-  {utc:"2026-06-14T01:00Z",t:"3h",   m:"Haïti - Écosse",                    g:"Groupe C",       tv:"bein"},
-  {utc:"2026-06-14T04:00Z",t:"6h",   m:"Australie - Turquie",               g:"Groupe D",       tv:"bein"},
+  {utc:"2026-06-14T01:00Z",t:"3h",   m:"Haïti - Écosse",                    g:"Groupe C"},
+  {utc:"2026-06-14T04:00Z",t:"6h",   m:"Australie - Turquie",               g:"Groupe D"},
   {utc:"2026-06-14T17:00Z",t:"19h",  m:"Allemagne - Curaçao",               g:"Groupe E",       tv:"m6"},
   {utc:"2026-06-14T20:00Z",t:"22h",  m:"Pays-Bas - Japon",                  g:"Groupe F",       tv:"m6"},
-  {utc:"2026-06-14T23:00Z",t:"1h",   m:"Côte d'Ivoire - Équateur",          g:"Groupe E",       tv:"bein"},
-  {utc:"2026-06-15T02:00Z",t:"4h",   m:"Suède - Tunisie",                   g:"Groupe F",       tv:"bein"},
+  {utc:"2026-06-14T23:00Z",t:"1h",   m:"Côte d'Ivoire - Équateur",          g:"Groupe E"},
+  {utc:"2026-06-15T02:00Z",t:"4h",   m:"Suède - Tunisie",                   g:"Groupe F"},
   {utc:"2026-06-15T16:00Z",t:"18h",  m:"Espagne - Cap-Vert",                g:"Groupe H",       tv:"m6"},
   {utc:"2026-06-15T19:00Z",t:"21h",  m:"Belgique - Égypte",                 g:"Groupe G",       tv:"m6"},
   {utc:"2026-06-15T22:00Z",t:"0h",   m:"Arabie saoudite - Uruguay",         g:"Groupe H",       tv:"m6"},
-  {utc:"2026-06-16T01:00Z",t:"3h",   m:"Iran - Nouvelle-Zélande",           g:"Groupe G",       tv:"bein"},
+  {utc:"2026-06-16T01:00Z",t:"3h",   m:"Iran - Nouvelle-Zélande",           g:"Groupe G"},
   {utc:"2026-06-16T19:00Z",t:"21h",  m:"France - Sénégal",                  g:"Groupe I",       tv:"m6",  fr:1},
   {utc:"2026-06-16T22:00Z",t:"0h",   m:"Irak - Norvège",                    g:"Groupe I",       tv:"m6"},
-  {utc:"2026-06-17T01:00Z",t:"3h",   m:"Argentine - Algérie",               g:"Groupe J",       tv:"bein"},
-  {utc:"2026-06-17T04:00Z",t:"6h",   m:"Autriche - Jordanie",               g:"Groupe J",       tv:"bein"},
+  {utc:"2026-06-17T01:00Z",t:"3h",   m:"Argentine - Algérie",               g:"Groupe J"},
+  {utc:"2026-06-17T04:00Z",t:"6h",   m:"Autriche - Jordanie",               g:"Groupe J"},
   {utc:"2026-06-17T17:00Z",t:"19h",  m:"Portugal - RD Congo",               g:"Groupe K",       tv:"m6"},
   {utc:"2026-06-17T20:00Z",t:"22h",  m:"Angleterre - Croatie",              g:"Groupe L",       tv:"m6"},
-  {utc:"2026-06-17T23:00Z",t:"1h",   m:"Ghana - Panama",                    g:"Groupe L",       tv:"bein"},
-  {utc:"2026-06-18T02:00Z",t:"4h",   m:"Ouzbékistan - Colombie",            g:"Groupe K",       tv:"bein"},
+  {utc:"2026-06-17T23:00Z",t:"1h",   m:"Ghana - Panama",                    g:"Groupe L"},
+  {utc:"2026-06-18T02:00Z",t:"4h",   m:"Ouzbékistan - Colombie",            g:"Groupe K"},
   {utc:"2026-06-18T16:00Z",t:"18h",  m:"Rép. tchèque - Afrique du Sud",     g:"Groupe A",       tv:"m6"},
   {utc:"2026-06-18T19:00Z",t:"21h",  m:"Suisse - Bosnie-Herzégovine",       g:"Groupe B",       tv:"m6"},
-  {utc:"2026-06-18T22:00Z",t:"0h",   m:"Canada - Qatar",                    g:"Groupe B",       tv:"bein"},
-  {utc:"2026-06-19T01:00Z",t:"3h",   m:"Mexique - Corée du Sud",            g:"Groupe A",       tv:"bein"},
+  {utc:"2026-06-18T22:00Z",t:"0h",   m:"Canada - Qatar",                    g:"Groupe B"},
+  {utc:"2026-06-19T01:00Z",t:"3h",   m:"Mexique - Corée du Sud",            g:"Groupe A"},
   {utc:"2026-06-19T19:00Z",t:"21h",  m:"États-Unis - Australie",            g:"Groupe D",       tv:"m6"},
   {utc:"2026-06-19T22:00Z",t:"0h",   m:"Écosse - Maroc",                    g:"Groupe C",       tv:"m6"},
-  {utc:"2026-06-20T00:30Z",t:"2h30", m:"Brésil - Haïti",                    g:"Groupe C",       tv:"bein"},
-  {utc:"2026-06-20T03:00Z",t:"5h",   m:"Turquie - Paraguay",                g:"Groupe D",       tv:"bein"},
+  {utc:"2026-06-20T00:30Z",t:"2h30", m:"Brésil - Haïti",                    g:"Groupe C"},
+  {utc:"2026-06-20T03:00Z",t:"5h",   m:"Turquie - Paraguay",                g:"Groupe D"},
   {utc:"2026-06-20T17:00Z",t:"19h",  m:"Pays-Bas - Suède",                  g:"Groupe F",       tv:"m6"},
   {utc:"2026-06-20T20:00Z",t:"22h",  m:"Allemagne - Côte d'Ivoire",         g:"Groupe E",       tv:"m6"},
-  {utc:"2026-06-21T00:00Z",t:"2h",   m:"Équateur - Curaçao",                g:"Groupe E",       tv:"bein"},
-  {utc:"2026-06-21T04:00Z",t:"6h",   m:"Tunisie - Japon",                   g:"Groupe F",       tv:"bein"},
+  {utc:"2026-06-21T00:00Z",t:"2h",   m:"Équateur - Curaçao",                g:"Groupe E"},
+  {utc:"2026-06-21T04:00Z",t:"6h",   m:"Tunisie - Japon",                   g:"Groupe F"},
   {utc:"2026-06-21T16:00Z",t:"18h",  m:"Espagne - Arabie saoudite",         g:"Groupe H",       tv:"m6"},
   {utc:"2026-06-21T19:00Z",t:"21h",  m:"Belgique - Iran",                   g:"Groupe G",       tv:"m6"},
-  {utc:"2026-06-21T22:00Z",t:"0h",   m:"Uruguay - Cap-Vert",                g:"Groupe H",       tv:"bein"},
-  {utc:"2026-06-22T01:00Z",t:"3h",   m:"Nouvelle-Zélande - Égypte",         g:"Groupe G",       tv:"bein"},
+  {utc:"2026-06-21T22:00Z",t:"0h",   m:"Uruguay - Cap-Vert",                g:"Groupe H"},
+  {utc:"2026-06-22T01:00Z",t:"3h",   m:"Nouvelle-Zélande - Égypte",         g:"Groupe G"},
   {utc:"2026-06-22T17:00Z",t:"19h",  m:"Argentine - Autriche",              g:"Groupe J",       tv:"m6"},
   {utc:"2026-06-22T21:00Z",t:"23h",  m:"France - Irak",                     g:"Groupe I",       tv:"m6",  fr:1},
-  {utc:"2026-06-23T00:00Z",t:"2h",   m:"Norvège - Sénégal",                 g:"Groupe I",       tv:"bein"},
-  {utc:"2026-06-23T03:00Z",t:"5h",   m:"Jordanie - Algérie",                g:"Groupe J",       tv:"bein"},
+  {utc:"2026-06-23T00:00Z",t:"2h",   m:"Norvège - Sénégal",                 g:"Groupe I"},
+  {utc:"2026-06-23T03:00Z",t:"5h",   m:"Jordanie - Algérie",                g:"Groupe J"},
   {utc:"2026-06-23T17:00Z",t:"19h",  m:"Portugal - Ouzbékistan",            g:"Groupe K",       tv:"m6"},
   {utc:"2026-06-23T20:00Z",t:"22h",  m:"Angleterre - Ghana",                g:"Groupe L",       tv:"m6"},
-  {utc:"2026-06-23T23:00Z",t:"1h",   m:"Panama - Croatie",                  g:"Groupe L",       tv:"bein"},
-  {utc:"2026-06-24T02:00Z",t:"4h",   m:"Colombie - RD Congo",               g:"Groupe K",       tv:"bein"},
+  {utc:"2026-06-23T23:00Z",t:"1h",   m:"Panama - Croatie",                  g:"Groupe L"},
+  {utc:"2026-06-24T02:00Z",t:"4h",   m:"Colombie - RD Congo",               g:"Groupe K"},
   {utc:"2026-06-24T19:00Z",t:"21h",  m:"Suisse - Canada",                   g:"Groupe B",       tv:"m6"},
-  {utc:"2026-06-24T19:00Z",t:"21h",  m:"Bosnie-Herzégovine - Qatar",        g:"Groupe B",       tv:"bein"},
+  {utc:"2026-06-24T19:00Z",t:"21h",  m:"Bosnie-Herzégovine - Qatar",        g:"Groupe B"},
   {utc:"2026-06-24T22:00Z",t:"0h",   m:"Écosse - Brésil",                   g:"Groupe C",       tv:"m6"},
   {utc:"2026-06-24T22:00Z",t:"0h",   m:"Maroc - Haïti",                     g:"Groupe C",       tv:"m6"},
-  {utc:"2026-06-25T01:00Z",t:"3h",   m:"Rép. tchèque - Mexique",            g:"Groupe A",       tv:"bein"},
-  {utc:"2026-06-25T01:00Z",t:"3h",   m:"Afrique du Sud - Corée du Sud",     g:"Groupe A",       tv:"bein"},
-  {utc:"2026-06-25T20:00Z",t:"22h",  m:"Curaçao - Côte d'Ivoire",           g:"Groupe E",       tv:"bein"},
+  {utc:"2026-06-25T01:00Z",t:"3h",   m:"Rép. tchèque - Mexique",            g:"Groupe A"},
+  {utc:"2026-06-25T01:00Z",t:"3h",   m:"Afrique du Sud - Corée du Sud",     g:"Groupe A"},
+  {utc:"2026-06-25T20:00Z",t:"22h",  m:"Curaçao - Côte d'Ivoire",           g:"Groupe E"},
   {utc:"2026-06-25T20:00Z",t:"22h",  m:"Équateur - Allemagne",              g:"Groupe E",       tv:"m6"},
-  {utc:"2026-06-25T23:00Z",t:"1h",   m:"Japon - Suède",                     g:"Groupe F",       tv:"bein"},
+  {utc:"2026-06-25T23:00Z",t:"1h",   m:"Japon - Suède",                     g:"Groupe F"},
   {utc:"2026-06-25T23:00Z",t:"1h",   m:"Tunisie - Pays-Bas",                g:"Groupe F",       tv:"m6"},
-  {utc:"2026-06-26T02:00Z",t:"4h",   m:"Turquie - États-Unis",              g:"Groupe D",       tv:"bein"},
-  {utc:"2026-06-26T02:00Z",t:"4h",   m:"Paraguay - Australie",              g:"Groupe D",       tv:"bein"},
+  {utc:"2026-06-26T02:00Z",t:"4h",   m:"Turquie - États-Unis",              g:"Groupe D"},
+  {utc:"2026-06-26T02:00Z",t:"4h",   m:"Paraguay - Australie",              g:"Groupe D"},
   {utc:"2026-06-26T19:00Z",t:"21h",  m:"Norvège - France",                  g:"Groupe I",       tv:"m6",  fr:1},
-  {utc:"2026-06-26T19:00Z",t:"21h",  m:"Sénégal - Irak",                    g:"Groupe I",       tv:"bein"},
-  {utc:"2026-06-27T00:00Z",t:"2h",   m:"Cap-Vert - Arabie saoudite",        g:"Groupe H",       tv:"bein"},
-  {utc:"2026-06-27T00:00Z",t:"2h",   m:"Uruguay - Espagne",                 g:"Groupe H",       tv:"bein"},
-  {utc:"2026-06-27T03:00Z",t:"5h",   m:"Égypte - Iran",                     g:"Groupe G",       tv:"bein"},
-  {utc:"2026-06-27T03:00Z",t:"5h",   m:"Nouvelle-Zélande - Belgique",       g:"Groupe G",       tv:"bein"},
+  {utc:"2026-06-26T19:00Z",t:"21h",  m:"Sénégal - Irak",                    g:"Groupe I"},
+  {utc:"2026-06-27T00:00Z",t:"2h",   m:"Cap-Vert - Arabie saoudite",        g:"Groupe H"},
+  {utc:"2026-06-27T00:00Z",t:"2h",   m:"Uruguay - Espagne",                 g:"Groupe H"},
+  {utc:"2026-06-27T03:00Z",t:"5h",   m:"Égypte - Iran",                     g:"Groupe G"},
+  {utc:"2026-06-27T03:00Z",t:"5h",   m:"Nouvelle-Zélande - Belgique",       g:"Groupe G"},
   {utc:"2026-06-27T21:00Z",t:"23h",  m:"Panama - Angleterre",               g:"Groupe L",       tv:"m6"},
   {utc:"2026-06-27T21:00Z",t:"23h",  m:"Croatie - Ghana",                   g:"Groupe L",       tv:"m6"},
   {utc:"2026-06-27T23:30Z",t:"1h30", m:"Colombie - Portugal",               g:"Groupe K",       tv:"m6"},
-  {utc:"2026-06-27T23:30Z",t:"1h30", m:"RD Congo - Ouzbékistan",            g:"Groupe K",       tv:"bein"},
-  {utc:"2026-06-28T02:00Z",t:"4h",   m:"Algérie - Autriche",                g:"Groupe J",       tv:"bein"},
-  {utc:"2026-06-28T02:00Z",t:"4h",   m:"Jordanie - Argentine",              g:"Groupe J",       tv:"bein"},
+  {utc:"2026-06-27T23:30Z",t:"1h30", m:"RD Congo - Ouzbékistan",            g:"Groupe K"},
+  {utc:"2026-06-28T02:00Z",t:"4h",   m:"Algérie - Autriche",                g:"Groupe J"},
+  {utc:"2026-06-28T02:00Z",t:"4h",   m:"Jordanie - Argentine",              g:"Groupe J"},
   // Phases finales — noms à confirmer selon le tableau
-  {utc:"2026-06-28T19:00Z",t:"21h",  m:"16e #1",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Kansas City - Arrowhead Stadium"},
-  {utc:"2026-06-28T22:00Z",t:"0h",   m:"16e #2",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Los Angeles - SoFi Stadium"},
-  {utc:"2026-06-29T20:30Z",t:"22h30",m:"16e #3",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Dallas - AT&T Stadium"},
-  {utc:"2026-06-29T22:00Z",t:"0h",   m:"16e #4",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Miami - Hard Rock Stadium"},
-  {utc:"2026-06-30T02:00Z",t:"4h",   m:"16e #5",            g:"16e de finale",  tv:"bein", ph:"ko", v:"San Francisco - Levi's Stadium"},
+  {utc:"2026-06-28T19:00Z",t:"21h",  m:"16e #1",            g:"16e de finale", ph:"ko", v:"Kansas City - Arrowhead Stadium"},
+  {utc:"2026-06-28T22:00Z",t:"0h",   m:"16e #2",            g:"16e de finale", ph:"ko", v:"Los Angeles - SoFi Stadium"},
+  {utc:"2026-06-29T20:30Z",t:"22h30",m:"16e #3",            g:"16e de finale", ph:"ko", v:"Dallas - AT&T Stadium"},
+  {utc:"2026-06-29T22:00Z",t:"0h",   m:"16e #4",            g:"16e de finale", ph:"ko", v:"Miami - Hard Rock Stadium"},
+  {utc:"2026-06-30T02:00Z",t:"4h",   m:"16e #5",            g:"16e de finale", ph:"ko", v:"San Francisco - Levi's Stadium"},
   {utc:"2026-06-30T21:00Z",t:"23h",  m:"16e #6",            g:"16e de finale",  tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       frIf:["1I"]},
-  {utc:"2026-07-01T03:00Z",t:"5h",   m:"16e #7",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Seattle - Lumen Field"},
-  {utc:"2026-07-01T16:00Z",t:"18h",  m:"16e #8",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Boston - Gillette Stadium"},
-  {utc:"2026-07-01T23:00Z",t:"1h",   m:"16e #9",            g:"16e de finale",  tv:"bein", ph:"ko", v:"Guadalajara - Estadio Akron"},
-  {utc:"2026-07-02T19:00Z",t:"21h",  m:"16e #10",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Monterrey - Estadio BBVA"},
-  {utc:"2026-07-03T19:00Z",t:"21h",  m:"16e #11",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Vancouver - BC Place"},
-  {utc:"2026-07-03T23:00Z",t:"1h",   m:"16e #12",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Atlanta - Mercedes-Benz Stadium"},
-  {utc:"2026-07-04T03:00Z",t:"5h",   m:"16e #13",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Mexico City - Estadio Azteca"},
-  {utc:"2026-07-05T18:00Z",t:"20h",  m:"16e #14",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Philadelphie - Lincoln Financial Field"},
-  {utc:"2026-07-05T22:00Z",t:"0h",   m:"16e #15",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Toronto - BMO Field"},
-  {utc:"2026-07-06T19:00Z",t:"21h",  m:"16e #16",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Los Angeles - Rose Bowl"},
-  {utc:"2026-07-06T23:00Z",t:"1h",   m:"16e #17",           g:"16e de finale",  tv:"bein", ph:"ko", v:"Montréal - Stade Olympique"},
+  {utc:"2026-07-01T03:00Z",t:"5h",   m:"16e #7",            g:"16e de finale", ph:"ko", v:"Seattle - Lumen Field"},
+  {utc:"2026-07-01T16:00Z",t:"18h",  m:"16e #8",            g:"16e de finale", ph:"ko", v:"Boston - Gillette Stadium"},
+  {utc:"2026-07-01T23:00Z",t:"1h",   m:"16e #9",            g:"16e de finale", ph:"ko", v:"Guadalajara - Estadio Akron"},
+  {utc:"2026-07-02T19:00Z",t:"21h",  m:"16e #10",           g:"16e de finale", ph:"ko", v:"Monterrey - Estadio BBVA"},
+  {utc:"2026-07-03T19:00Z",t:"21h",  m:"16e #11",           g:"16e de finale", ph:"ko", v:"Vancouver - BC Place"},
+  {utc:"2026-07-03T23:00Z",t:"1h",   m:"16e #12",           g:"16e de finale", ph:"ko", v:"Atlanta - Mercedes-Benz Stadium"},
+  {utc:"2026-07-04T03:00Z",t:"5h",   m:"16e #13",           g:"16e de finale", ph:"ko", v:"Mexico City - Estadio Azteca"},
+  {utc:"2026-07-05T18:00Z",t:"20h",  m:"16e #14",           g:"16e de finale", ph:"ko", v:"Philadelphie - Lincoln Financial Field"},
+  {utc:"2026-07-05T22:00Z",t:"0h",   m:"16e #15",           g:"16e de finale", ph:"ko", v:"Toronto - BMO Field"},
+  {utc:"2026-07-06T19:00Z",t:"21h",  m:"16e #16",           g:"16e de finale", ph:"ko", v:"Los Angeles - Rose Bowl"},
+  {utc:"2026-07-06T23:00Z",t:"1h",   m:"16e #17",           g:"16e de finale", ph:"ko", v:"Montréal - Stade Olympique"},
   {utc:"2026-07-08T19:00Z",t:"21h",  m:"8e #1",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       frIf:["1I"]},
   {utc:"2026-07-09T01:00Z",t:"3h",   m:"8e #2",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"Dallas - AT&T Stadium"},
   {utc:"2026-07-09T19:00Z",t:"21h",  m:"8e #3",             g:"8e de finale",   tv:"m6",   ph:"ko", v:"Los Angeles - SoFi Stadium"},
@@ -516,7 +514,6 @@ function renderStandings() {
       const isFr   = r.name === 'France';
       const is3rd  = i === 2;
       const is3rdQ = is3rd && anyResults && qualifiedThirds.has(r.name);
-      const is3rdX = is3rd && anyResults && !qualifiedThirds.has(r.name);
       const cls    = isFr ? 'st-fr' : i < 2 ? 'st-q1' : is3rdQ ? 'st-q3ok' : '';
       const gdVal  = r.gd > 0 ? `<span class="gt-gd-pos">+${r.gd}</span>`
                    : r.gd < 0 ? `<span class="gt-gd-neg">${r.gd}</span>`
@@ -550,9 +547,7 @@ function liveLabel(m) {
   const s = scoreMap[utcKey(m.utc)];
   // Score ESPN disponible
   if (s && (s.st === 'live' || s.st === 'ht')) {
-    const score = s.hs !== null ? ` ${s.hs}-${s.as}` : '';
-    const half  = s.st === 'ht' ? 'Mi-temps' : (s.min || '');
-    return `${half}${score}`.trim();
+    return s.st === 'ht' ? 'Mi-temps' : (s.min || '');
   }
   // Fallback : mi-temps locale (halftime ≈ 45+stoppage to ~70min from KO)
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
@@ -560,12 +555,10 @@ function liveLabel(m) {
   return elapsed < 45 ? '1ère mi-temps' : '2ème mi-temps';
 }
 
-function scoreLabel(m, st) {
+function scoreLabel(m) {
   const s = scoreMap[utcKey(m.utc)];
   if (!s || s.hs === null) return '';
   if (s.st === 'ft' || s.st === 'live' || s.st === 'ht') return `${s.hs}-${s.as}`;
-  // Fallback local : show score if ESPN data unavailable but match is in progress
-  if (st === 'live') return '';
   return '';
 }
 
@@ -630,7 +623,7 @@ function render() {
     }
 
     const st    = matchState(x);
-    const score = scoreLabel(x, st);
+    const score = scoreLabel(x);
     html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
       ${timeCell(st, x, next)}
       <div class="match-info">
