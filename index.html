@@ -167,6 +167,8 @@
   .badge-bein { background: var(--bn-bg); color: var(--bn-tx); }
   .badge-fin  { background: rgba(240,192,64,.15); color: var(--gold); }
 
+  .score-ft { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; }
+
   .empty  { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
   footer  { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--muted); border-top: 1px solid var(--bd); }
 
@@ -364,17 +366,66 @@ function matchHtml(str) {
 }
 
 // ── Constantes ─────────────────────────────────────────────────────────────
-const DUR_GROUP  = 115 * 60 * 1000; // 90min + ~15min mi-temps + ~10min arrêts
-const DUR_KO     = 160 * 60 * 1000; // + 30min prolongations éventuelles
+const DUR_GROUP  = 115 * 60 * 1000;
+const DUR_KO     = 160 * 60 * 1000;
 const DAYS       = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 const MONTHS     = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
+const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── State ──────────────────────────────────────────────────────────────────
 let activeFilter = 'all';
+let scoreMap     = {}; // utcKey → { hs, as, st:'live'|'ht'|'ft'|'sched', min }
+
+// ── ESPN ───────────────────────────────────────────────────────────────────
+function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
+
+async function fetchScores() {
+  try {
+    const r = await fetch(ESPN_URL);
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    scoreMap = {};
+    (data.events || []).forEach(ev => {
+      const comp = ev.competitions?.[0];
+      if (!comp) return;
+      const sn   = comp.status?.type?.name || '';
+      const isLv = sn === 'STATUS_IN_PROGRESS';
+      const isHT = sn === 'STATUS_HALFTIME';
+      const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const home = comp.competitors?.find(c => c.homeAway === 'home');
+      const away = comp.competitors?.find(c => c.homeAway === 'away');
+      scoreMap[utcKey(ev.date)] = {
+        hs: home?.score ?? null,
+        as: away?.score ?? null,
+        st: isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min: isHT ? 'MT' : (comp.status?.displayClock || ''),
+      };
+    });
+    // Mettre à jour les noms d'équipes KO dès qu'ESPN les connaît
+    MATCHES.forEach(m => {
+      if (m.ph !== 'ko') return;
+      const s = scoreMap[utcKey(m.utc)];
+      if (!s) return;
+      const home = (data.events || []).find(ev => utcKey(ev.date) === utcKey(m.utc))
+        ?.competitions?.[0]?.competitors;
+      if (!home) return;
+      const hn = home.find(c => c.homeAway === 'home')?.team?.shortDisplayName;
+      const an = home.find(c => c.homeAway === 'away')?.team?.shortDisplayName;
+      if (hn && an) m.m = `${hn} - ${an}`;
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // ── Logique temporelle ─────────────────────────────────────────────────────
+// Priorité : données ESPN si disponibles, sinon détection locale par horloge
 function matchState(m) {
+  const s = scoreMap[utcKey(m.utc)];
+  if (s && s.st !== 'sched') return s.st;
+  // Fallback local
   const now = Date.now();
   const ko  = new Date(m.utc).getTime();
   const dur = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
@@ -383,10 +434,25 @@ function matchState(m) {
   return 'sched';
 }
 
-function liveHalf(m) {
+function liveLabel(m) {
+  const s = scoreMap[utcKey(m.utc)];
+  // Score ESPN disponible
+  if (s && (s.st === 'live' || s.st === 'ht')) {
+    const score = s.hs !== null ? ` ${s.hs}-${s.as}` : '';
+    const half  = s.st === 'ht' ? 'Mi-temps' : (s.min || '');
+    return `${half}${score}`.trim();
+  }
+  // Fallback : mi-temps locale
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 46 && elapsed <= 60) return 'Mi-temps';
   return elapsed <= 45 ? '1ère mi-temps' : '2ème mi-temps';
+}
+
+function scoreLabel(m) {
+  const s = scoreMap[utcKey(m.utc)];
+  if (!s || s.hs === null) return '';
+  if (s.st === 'ft')  return `${s.hs}-${s.as}`;
+  return '';
 }
 
 function nextMatchUtc() {
@@ -404,7 +470,7 @@ function dayLabel(utc) {
 
 // ── Rendu ──────────────────────────────────────────────────────────────────
 function rowClass(st, m, next) {
-  if (st === 'live')  return 'row lv';
+  if (st === 'live' || st === 'ht') return 'row lv';
   if (m.fr)           return 'row fr';
   if (m.utc === next) return 'row nx';
   if (m.final)        return 'row fn';
@@ -412,10 +478,10 @@ function rowClass(st, m, next) {
 }
 
 function timeCell(st, m, next) {
-  const isLive = st === 'live';
+  const isLive = st === 'live' || st === 'ht';
   const isNext = !isLive && m.utc === next;
   const sub = isLive
-    ? `<span class="badge-live">⬤ ${liveHalf(m)}</span>`
+    ? `<span class="badge-live">⬤ ${liveLabel(m)}</span>`
     : isNext ? `<span class="badge-next">▶ SUIVANT</span>` : '';
   return `<div class="time-col"><span class="time">${m.t}</span>${sub}</div>`;
 }
@@ -456,12 +522,14 @@ function render(filter) {
     }
     html += `<div class="day-group"><div class="day-label">${label}</div>`;
     matches.forEach(x => {
-      const st   = matchState(x);
-      const note = x.note ? `<span class="note">(${x.note})</span>` : '';
+      const st    = matchState(x);
+      const note  = x.note ? `<span class="note">(${x.note})</span>` : '';
+      const score = scoreLabel(x);
+      const sc    = score ? ` <span class="score-ft">${score}</span>` : '';
       html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
         ${timeCell(st, x, next)}
         <div class="match-info">
-          <div class="teams">${matchHtml(x.m)}${note}</div>
+          <div class="teams">${matchHtml(x.m)}${sc}${note}</div>
           <div class="group">${x.g}</div>
         </div>
         ${channelBadge(x)}
@@ -529,8 +597,16 @@ document.getElementById('toolbar').addEventListener('click', e => {
   render(activeFilter);
 });
 
-render(activeFilter);
-setInterval(() => render(activeFilter), 60000);
+async function refresh() {
+  await fetchScores();
+  render(activeFilter);
+  // Refresh plus fréquent si match(s) en cours
+  const hasLive = MATCHES.some(x => { const s = scoreMap[utcKey(x.utc)]; return s && (s.st === 'live' || s.st === 'ht'); });
+  setTimeout(refresh, hasLive ? 30000 : 120000);
+}
+
+render(activeFilter); // Affichage immédiat avec détection locale
+refresh();            // Puis fetch ESPN + refresh planifié
 </script>
 </body>
 </html>
