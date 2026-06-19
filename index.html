@@ -25,8 +25,6 @@
     --gold:    #f0c040;
     --m6-bg:   rgba(59,127,245,0.15);
     --m6-tx:   #7bb3ff;
-    --bn-bg:   rgba(132,148,180,0.12);
-    --bn-tx:   #8494b4;
     --r:       8px;
   }
 
@@ -148,7 +146,6 @@
   /* Channel badges */
   .badge      { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
   .badge-m6   { background: var(--m6-bg); color: var(--m6-tx); }
-  .badge-bein { background: var(--bn-bg); color: var(--bn-tx); }
   .badge-fin  { background: rgba(240,192,64,.15); color: var(--gold); }
 
   .score-ft { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; }
@@ -229,13 +226,12 @@
     <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Prochain match</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
-    <div class="legend-item"><span class="badge badge-m6">M6</span>Gratuit</div>
-    <div class="legend-item"><span class="badge badge-bein">beIN</span>Abonnement</div>
+    <div class="legend-item"><span class="badge badge-m6">M6</span>En clair</div>
   </div>
   <div id="cal"></div>
 </main>
 
-<footer>Chaînes : M6 / beIN Sports &middot; Horaires en heure française &middot; Matchs en cours détectés localement</footer>
+<footer>Horaires en heure française &middot; Scores ESPN</footer>
 
 <script>
 // ── Données ────────────────────────────────────────────────────────────────
@@ -602,7 +598,7 @@ function timeCell(st, m, next) {
 function channelBadge(m) {
   if (m.final)       return '<span class="badge badge-fin">M6 — FINALE</span>';
   if (m.tv === 'm6') return '<span class="badge badge-m6">M6</span>';
-  return '<span class="badge badge-bein">beIN</span>';
+  return '';
 }
 
 function render() {
