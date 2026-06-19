@@ -156,6 +156,7 @@
   .badge-fin  { background: rgba(240,192,64,.15); color: var(--gold); }
 
   .score-ft { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; }
+  .score-lv { font-size: 13px; font-weight: 700; color: var(--lv-c);  background: rgba(239,68,68,0.12);  padding: 1px 6px; border-radius: 4px; }
 
   /* ── Standings ── */
   #stoggle {
@@ -379,6 +380,21 @@ function matchHtml(str) {
   return `${teamHtml(a)} <span class="sep">-</span> ${teamHtml(b)}`;
 }
 
+// Affiche "EquipeA [score] EquipeB" si score dispo, sinon "EquipeA - EquipeB"
+function teamsHtml(x, st) {
+  const parts = x.m.split(' - ');
+  if (parts.length < 2) return `<span>${x.m}</span>`;
+  const [a, b] = parts;
+  const s = scoreMap[utcKey(x.utc)];
+  const isLive = st === 'live' || st === 'ht';
+  const isFT   = st === 'ft';
+  if (s && s.hs !== null && (isLive || isFT)) {
+    const cls = isFT ? 'score-ft' : 'score-lv';
+    return `${teamHtml(a)} <span class="${cls}">${s.hs}–${s.as}</span> ${teamHtml(b)}`;
+  }
+  return `${teamHtml(a)} <span class="sep">-</span> ${teamHtml(b)}`;
+}
+
 // ── Constantes ─────────────────────────────────────────────────────────────
 const DUR_GROUP  = 115 * 60 * 1000;
 const DUR_KO     = 160 * 60 * 1000;
@@ -534,26 +550,24 @@ function matchState(m) {
   const s = scoreMap[utcKey(m.utc)];
   if (s && s.st !== 'sched') return s.st;
   // Fallback local
-  const now = Date.now();
-  const ko  = new Date(m.utc).getTime();
-  const dur = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
-  if (now >= ko && now < ko + dur) return 'live';
-  if (now >= ko + dur)             return 'ft';
+  const now     = Date.now();
+  const ko      = new Date(m.utc).getTime();
+  const dur     = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
+  const elapsed = now - ko;
+  if (elapsed >= 0 && elapsed < dur) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
+  if (elapsed >= dur)                return 'ft';
   return 'sched';
 }
 
 function liveLabel(m) {
   const s = scoreMap[utcKey(m.utc)];
-  // Score ESPN disponible
   if (s && (s.st === 'live' || s.st === 'ht')) {
-    const score = s.hs !== null ? ` ${s.hs}-${s.as}` : '';
-    const half  = s.st === 'ht' ? 'Mi-temps' : (s.min || '');
-    return `${half}${score}`.trim();
+    return s.st === 'ht' ? 'Mi-temps' : (s.min || '');
   }
-  // Fallback : mi-temps locale
+  // Fallback local
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 46 && elapsed <= 60) return 'Mi-temps';
-  return elapsed <= 45 ? '1ère mi-temps' : '2ème mi-temps';
+  return '';
 }
 
 function scoreLabel(m) {
@@ -588,8 +602,9 @@ function rowClass(st, m, next) {
 function timeCell(st, m, next) {
   const isLive = st === 'live' || st === 'ht';
   const isNext = !isLive && m.utc === next;
+  const label  = isLive ? liveLabel(m) : '';
   const sub = isLive
-    ? `<span class="badge-live">⬤ ${liveLabel(m)}</span>`
+    ? `<span class="badge-live">⬤${label ? ' ' + label : ''}</span>`
     : isNext ? `<span class="badge-next">▶ SUIVANT</span>` : '';
   return `<div class="time-col"><span class="time">${m.t}</span>${sub}</div>`;
 }
@@ -624,12 +639,10 @@ function render() {
     }
 
     const st    = matchState(x);
-    const score = scoreLabel(x);
-    const sc    = score ? ` <span class="score-ft">${score}</span>` : '';
     html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
       ${timeCell(st, x, next)}
       <div class="match-info">
-        <div class="teams">${matchHtml(x.m)}${sc}</div>
+        <div class="teams">${teamsHtml(x, st)}</div>
         <div class="group">${x.g}</div>
         ${x.v ? `<div class="venue">${x.v}</div>` : ''}
       </div>
@@ -656,15 +669,15 @@ function updateStatusBar(next) {
     return;
   }
 
-  const isLive = live.length > 0;
-  const s      = scoreMap[utcKey(focus.utc)];
+  const isLive  = live.length > 0;
+  const focusSt = matchState(focus);
+  const s       = scoreMap[utcKey(focus.utc)];
 
-  let labelHtml, scoreHtml = '', minHtml = '';
+  let labelHtml, minHtml = '';
   if (isLive) {
     const count = live.length;
-    labelHtml = `⬤ ${count > 1 ? count + ' matchs en cours' : 'En cours'}`;
-    if (s && s.hs !== null) scoreHtml = `<span class="fc-score">${s.hs} – ${s.as}</span>`;
     const min = s?.min || (s?.st === 'ht' ? 'Mi-temps' : '');
+    labelHtml = `⬤ ${count > 1 ? count + ' matchs en cours' : 'En cours'}`;
     if (min) minHtml = `<span class="fc-min">${min}</span>`;
   } else {
     labelHtml = `▶ Prochain · ${focus.t}`;
@@ -674,7 +687,7 @@ function updateStatusBar(next) {
   card.style.display = 'flex';
   card.innerHTML = `
     <div class="fc-label">${labelHtml}</div>
-    <div class="fc-teams">${matchHtml(focus.m)}${scoreHtml}${minHtml}</div>
+    <div class="fc-teams">${teamsHtml(focus, focusSt)}${minHtml}</div>
   `;
 }
 
