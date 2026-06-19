@@ -181,7 +181,9 @@
   .gtable td { padding: 5px 5px; text-align: right; border-top: 1px solid var(--bd); }
   .gtable td:first-child { text-align: left; padding-left: 8px; }
   .gtable tr.st-q1 { background: rgba(59,127,245,0.10); }
-  .gtable tr.st-q3 { background: rgba(59,127,245,0.04); }
+  .gtable tr.st-q3ok { background: rgba(240,192,64,0.15); }
+  .gtable tr.st-q3no { opacity: .55; }
+  .gt-q-dot3 { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; opacity: .8; }
   .gtable tr.st-fr { background: var(--fr-bg); }
   .gt-team { display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .gt-team .fi { font-size: 1em; border-radius: 2px; flex-shrink: 0; }
@@ -483,16 +485,29 @@ function renderStandings() {
   const groupOrder = [];
   MATCHES.forEach(m => { if (!m.ph && !seen.has(m.g)) { seen.add(m.g); groupOrder.push(m.g); } });
   let html = '';
+  // Collect all 3rd-place teams to determine best 8
+  const sortFn = (a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name);
+  const rowsByGroup = {};
   groupOrder.forEach(gname => {
     const teams = groups[gname] || {};
-    const rows = Object.entries(teams)
+    rowsByGroup[gname] = Object.entries(teams)
       .map(([name, s]) => ({
         name, played: s.played, w: s.w, d: s.d, l: s.l,
-        gf: s.gf, ga: s.ga,
-        gd: s.gf - s.ga,
-        pts: s.w * 3 + s.d,
+        gf: s.gf, ga: s.ga, gd: s.gf - s.ga, pts: s.w * 3 + s.d,
       }))
-      .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+      .sort(sortFn);
+  });
+  const thirds = [];
+  groupOrder.forEach(gname => {
+    const rows = rowsByGroup[gname];
+    if (rows.length >= 3) thirds.push({ ...rows[2], group: gname });
+  });
+  thirds.sort(sortFn);
+  const qualifiedThirds = new Set(thirds.slice(0, 8).map(t => t.name));
+  const anyResults = thirds.some(t => t.played > 0);
+
+  groupOrder.forEach(gname => {
+    const rows = rowsByGroup[gname];
     html += `<div class="gtable"><div class="gtable-head">${gname}</div>
       <table><thead><tr>
         <th>Équipe</th><th title="Joués">J</th><th title="Victoires">V</th>
@@ -500,12 +515,16 @@ function renderStandings() {
         <th title="Différence de buts">+/-</th><th title="Points">Pts</th>
       </tr></thead><tbody>`;
     rows.forEach((r, i) => {
-      const isFr  = r.name === 'France';
-      const cls   = isFr ? 'st-fr' : i < 2 ? 'st-q1' : i === 2 ? 'st-q3' : '';
-      const gdVal = r.gd > 0 ? `<span class="gt-gd-pos">+${r.gd}</span>`
-                  : r.gd < 0 ? `<span class="gt-gd-neg">${r.gd}</span>`
-                  : '0';
-      const qdot  = (i < 2) ? '<span class="gt-q-dot"></span>' : '';
+      const isFr   = r.name === 'France';
+      const is3rd  = i === 2;
+      const is3rdQ = is3rd && anyResults && qualifiedThirds.has(r.name);
+      const is3rdX = is3rd && anyResults && !qualifiedThirds.has(r.name);
+      const cls    = isFr ? 'st-fr' : i < 2 ? 'st-q1' : is3rdQ ? 'st-q3ok' : is3rdX ? 'st-q3no' : '';
+      const gdVal  = r.gd > 0 ? `<span class="gt-gd-pos">+${r.gd}</span>`
+                   : r.gd < 0 ? `<span class="gt-gd-neg">${r.gd}</span>`
+                   : '0';
+      const qdot   = i < 2 ? '<span class="gt-q-dot"></span>'
+                   : is3rdQ ? '<span class="gt-q-dot3"></span>' : '';
       html += `<tr class="${cls}"><td><div class="gt-team">${qdot}${teamHtml(r.name)}</div></td>
         <td>${r.played}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
         <td>${gdVal}</td><td class="gt-pts">${r.pts}</td></tr>`;
