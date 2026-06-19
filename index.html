@@ -424,7 +424,7 @@ async function fetchScores() {
       if (!home) return;
       const hn = home.find(c => c.homeAway === 'home')?.team?.shortDisplayName;
       const an = home.find(c => c.homeAway === 'away')?.team?.shortDisplayName;
-      if (hn && an) m.m = `${hn} - ${an}`;
+      if (hn && an && FLAG[hn] && FLAG[an]) m.m = `${hn} - ${an}`;
     });
     return true;
   } catch {
