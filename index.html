@@ -598,39 +598,35 @@ function render() {
 
   if (!list.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
 
-  const byDay = new Map();
+  let html = '', lastDay = '', lastPhase = '';
   list.forEach(x => {
-    const label = dayLabel(x.utc);
-    if (!byDay.has(label)) byDay.set(label, []);
-    byDay.get(label).push(x);
-  });
+    const day   = dayLabel(x.utc);
+    const phase = x.ph === 'ko' ? (KO_PHASES.find(p => x.g.startsWith(p)) || x.g) : '';
 
-  let html = '', lastPhase = '';
-  for (const [label, matches] of byDay) {
-    if (matches[0].ph === 'ko') {
-      const phase  = matches[0].g;
-      const phKey  = KO_PHASES.find(p => phase.startsWith(p));
-      if (phKey && phKey !== lastPhase) {
-        html += `<div class="phase-title">${phase}</div>`;
-        lastPhase = phKey;
+    // Fermer le day-group précédent si changement de jour OU entrée en phase KO
+    if (day !== lastDay || (phase && phase !== lastPhase)) {
+      if (lastDay) html += '</div>';
+      if (phase && phase !== lastPhase) {
+        html += `<div class="phase-title">${x.g}</div>`;
+        lastPhase = phase;
       }
+      html += `<div class="day-group"><div class="day-label">${day}</div>`;
+      lastDay = day;
     }
-    html += `<div class="day-group"><div class="day-label">${label}</div>`;
-    matches.forEach(x => {
-      const st    = matchState(x);
-      const score = scoreLabel(x);
-      const sc    = score ? ` <span class="score-ft">${score}</span>` : '';
-      html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
-        ${timeCell(st, x, next)}
-        <div class="match-info">
-          <div class="teams">${matchHtml(x.m)}${sc}</div>
-          <div class="group">${x.g}</div>
-        </div>
-        ${channelBadge(x)}
-      </div>`;
-    });
-    html += '</div>';
-  }
+
+    const st    = matchState(x);
+    const score = scoreLabel(x);
+    const sc    = score ? ` <span class="score-ft">${score}</span>` : '';
+    html += `<div class="${rowClass(st, x, next)}" data-utc="${x.utc}">
+      ${timeCell(st, x, next)}
+      <div class="match-info">
+        <div class="teams">${matchHtml(x.m)}${sc}</div>
+        <div class="group">${x.g}</div>
+      </div>
+      ${channelBadge(x)}
+    </div>`;
+  });
+  if (lastDay) html += '</div>';
 
   cal.innerHTML = html;
   updateStatusBar(next);
