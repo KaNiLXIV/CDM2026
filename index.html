@@ -74,17 +74,17 @@
     transition: border-color .15s, background .15s;
     font-size: 13px;
     color: var(--text);
-    text-align: center;
+    line-height: 1;
   }
   #fcard:hover { border-color: var(--accent); background: var(--surf2); }
   #fcard.is-live { border-color: var(--lv-bd); }
   #fcard.is-live:hover { border-color: var(--lv-c); }
   #fcard.is-fr  { border-color: var(--fr-bd); }
-  .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .fc-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); line-height: 1; }
   #fcard.is-live .fc-label { color: var(--lv-c); }
-  .fc-teams { font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-  .fc-teams .fi { font-size: 1em; border-radius: 2px; }
-  .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; }
+  .fc-teams { font-weight: 600; line-height: 1; }
+  .fc-teams .fi { font-size: 1em; border-radius: 2px; vertical-align: middle; }
+  .fc-min   { font-size: 11px; color: var(--lv-c); font-weight: 600; vertical-align: middle; }
 
   /* ── Layout ── */
   main { max-width: 840px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
