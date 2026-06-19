@@ -169,12 +169,50 @@
 
   .score-ft { font-size: 13px; font-weight: 700; color: var(--muted); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 4px; }
 
+  /* ── Standings ── */
+  #stoggle {
+    width: 100%; text-align: left;
+    padding: 9px 14px; margin-bottom: 1rem;
+    background: var(--surface); border: 1px solid var(--bd2); border-radius: var(--r);
+    color: var(--muted); font-size: 13px; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: border-color .15s, color .15s;
+  }
+  #stoggle:hover { border-color: var(--accent); color: var(--text); }
+  #stoggle .sarrow { display: inline-block; transition: transform .2s; font-style: normal; }
+  #stoggle.open .sarrow { transform: rotate(90deg); }
+
+  #standings { display: none; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  #standings.open { display: grid; }
+
+  .gtable { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--r); overflow: hidden; }
+  .gtable-head {
+    background: var(--surf2); padding: 6px 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--accent); border-bottom: 1px solid var(--bd);
+  }
+  .gtable table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .gtable th { color: var(--muted); font-weight: 600; padding: 4px 5px; text-align: right; font-size: 11px; }
+  .gtable th:first-child { text-align: left; padding-left: 8px; }
+  .gtable td { padding: 5px 5px; text-align: right; border-top: 1px solid var(--bd); }
+  .gtable td:first-child { text-align: left; padding-left: 8px; }
+  .gtable tr.st-q1 { background: rgba(59,127,245,0.10); }
+  .gtable tr.st-q3 { background: rgba(59,127,245,0.04); }
+  .gtable tr.st-fr { background: var(--fr-bg); }
+  .gt-team { display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gt-team .fi { font-size: 1em; border-radius: 2px; flex-shrink: 0; }
+  .gt-pts { font-weight: 700; color: var(--text); }
+  .gt-gd-pos { color: #4ade80; }
+  .gt-gd-neg { color: var(--lv-c); }
+  .gt-q-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; opacity: .7; }
+
   .empty  { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
   footer  { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--muted); border-top: 1px solid var(--bd); }
 
   @media (max-width: 500px) {
     .row   { grid-template-columns: 46px 1fr auto; gap: 8px; padding: 9px 10px; }
     .teams { font-size: 13px; }
+    #standings { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -213,6 +251,8 @@
     <div class="legend-item"><span class="badge badge-m6">M6</span>Gratuit</div>
     <div class="legend-item"><span class="badge badge-bein">beIN</span>Abonnement</div>
   </div>
+  <button id="stoggle"><i class="sarrow">▶</i> Classements des groupes</button>
+  <div id="standings"></div>
   <div id="cal"></div>
 </main>
 
@@ -376,6 +416,7 @@ const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.wo
 // ── State ──────────────────────────────────────────────────────────────────
 let activeFilter = 'all';
 let scoreMap     = {}; // utcKey → { hs, as, st:'live'|'ht'|'ft'|'sched', min }
+let scoreMapArr  = {}; // utcKey → ordered array (handles simultaneous matches)
 
 // ── ESPN ───────────────────────────────────────────────────────────────────
 function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
@@ -386,6 +427,7 @@ async function fetchScores() {
     if (!r.ok) throw new Error(r.status);
     const data = await r.json();
     scoreMap = {};
+    const newArr = {};
     (data.events || []).forEach(ev => {
       const comp = ev.competitions?.[0];
       if (!comp) return;
@@ -395,13 +437,18 @@ async function fetchScores() {
       const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
       const home = comp.competitors?.find(c => c.homeAway === 'home');
       const away = comp.competitors?.find(c => c.homeAway === 'away');
-      scoreMap[utcKey(ev.date)] = {
+      const entry = {
         hs: home?.score ?? null,
         as: away?.score ?? null,
         st: isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
         min: isHT ? 'MT' : (comp.status?.displayClock || ''),
       };
+      const key = utcKey(ev.date);
+      scoreMap[key] = entry;
+      if (!newArr[key]) newArr[key] = [];
+      newArr[key].push(entry);
     });
+    scoreMapArr = newArr;
     // Mettre à jour les noms d'équipes KO dès qu'ESPN les connaît
     MATCHES.forEach(m => {
       if (m.ph !== 'ko') return;
@@ -418,6 +465,77 @@ async function fetchScores() {
   } catch {
     return false;
   }
+}
+
+// ── Classements ────────────────────────────────────────────────────────────
+function computeStandings() {
+  const groups = {};
+  const bucketIdx = {};
+  MATCHES.forEach(m => {
+    if (m.ph === 'ko') return;
+    const parts = m.m.split(' - ');
+    if (parts.length < 2) return;
+    const [ta, tb] = parts;
+    if (!groups[m.g]) groups[m.g] = {};
+    const g = groups[m.g];
+    if (!g[ta]) g[ta] = { w:0, d:0, l:0, gf:0, ga:0, played:0 };
+    if (!g[tb]) g[tb] = { w:0, d:0, l:0, gf:0, ga:0, played:0 };
+    const key = utcKey(m.utc);
+    if (bucketIdx[key] === undefined) bucketIdx[key] = 0;
+    const idx = bucketIdx[key]++;
+    const arr = scoreMapArr[key];
+    const s   = (arr && arr[idx] !== undefined) ? arr[idx] : scoreMap[key];
+    if (!s || s.st !== 'ft' || s.hs === null) return;
+    const hs = +s.hs, as = +s.as;
+    g[ta].played++; g[tb].played++;
+    g[ta].gf += hs;  g[ta].ga += as;
+    g[tb].gf += as;  g[tb].ga += hs;
+    if      (hs > as) { g[ta].w++; g[tb].l++; }
+    else if (as > hs) { g[tb].w++; g[ta].l++; }
+    else              { g[ta].d++; g[tb].d++; }
+  });
+  return groups;
+}
+
+function renderStandings() {
+  const container = document.getElementById('standings');
+  if (!container.classList.contains('open')) return;
+  const groups = computeStandings();
+  // Preserve group order from MATCHES
+  const seen = new Set();
+  const groupOrder = [];
+  MATCHES.forEach(m => { if (!m.ph && !seen.has(m.g)) { seen.add(m.g); groupOrder.push(m.g); } });
+  let html = '';
+  groupOrder.forEach(gname => {
+    const teams = groups[gname] || {};
+    const rows = Object.entries(teams)
+      .map(([name, s]) => ({
+        name, played: s.played, w: s.w, d: s.d, l: s.l,
+        gf: s.gf, ga: s.ga,
+        gd: s.gf - s.ga,
+        pts: s.w * 3 + s.d,
+      }))
+      .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+    html += `<div class="gtable"><div class="gtable-head">${gname}</div>
+      <table><thead><tr>
+        <th>Équipe</th><th title="Joués">J</th><th title="Victoires">V</th>
+        <th title="Nuls">N</th><th title="Défaites">D</th>
+        <th title="Différence de buts">+/-</th><th title="Points">Pts</th>
+      </tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+      const isFr  = r.name === 'France';
+      const cls   = isFr ? 'st-fr' : i < 2 ? 'st-q1' : i === 2 ? 'st-q3' : '';
+      const gdVal = r.gd > 0 ? `<span class="gt-gd-pos">+${r.gd}</span>`
+                  : r.gd < 0 ? `<span class="gt-gd-neg">${r.gd}</span>`
+                  : '0';
+      const qdot  = (i < 2) ? '<span class="gt-q-dot"></span>' : '';
+      html += `<tr class="${cls}"><td><div class="gt-team">${qdot}${teamHtml(r.name)}</div></td>
+        <td>${r.played}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
+        <td>${gdVal}</td><td class="gt-pts">${r.pts}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  container.innerHTML = html || '<p class="empty">Aucune donnée disponible.</p>';
 }
 
 // ── Logique temporelle ─────────────────────────────────────────────────────
@@ -600,10 +718,17 @@ document.getElementById('toolbar').addEventListener('click', e => {
 async function refresh() {
   await fetchScores();
   render(activeFilter);
+  renderStandings();
   // Refresh plus fréquent si match(s) en cours
   const hasLive = MATCHES.some(x => { const s = scoreMap[utcKey(x.utc)]; return s && (s.st === 'live' || s.st === 'ht'); });
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
+
+document.getElementById('stoggle').addEventListener('click', () => {
+  document.getElementById('stoggle').classList.toggle('open');
+  document.getElementById('standings').classList.toggle('open');
+  renderStandings();
+});
 
 render(activeFilter); // Affichage immédiat avec détection locale
 refresh();            // Puis fetch ESPN + refresh planifié
