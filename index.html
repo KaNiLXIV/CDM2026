@@ -547,7 +547,8 @@ function liveLabel(m) {
   const s = scoreMap[utcKey(m.utc)];
   // Score ESPN disponible
   if (s && (s.st === 'live' || s.st === 'ht')) {
-    return s.st === 'ht' ? 'Mi-temps' : (s.min || '');
+    if (s.st === 'ht') return 'Mi-temps';
+    if (s.min) return s.min;
   }
   // Fallback : mi-temps locale (halftime ≈ 45+stoppage to ~70min from KO)
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
@@ -602,12 +603,10 @@ function channelBadge(m) {
 function render() {
   const cal  = document.getElementById('cal');
   const next = nextMatchUtc();
-  const list = MATCHES;
-
-  if (!list.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
+  if (!MATCHES.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
 
   let html = '', lastDay = '', lastPhase = '';
-  list.forEach(x => {
+  MATCHES.forEach(x => {
     const day   = dayLabel(x.utc);
     const phase = x.ph === 'ko' ? (KO_PHASES.find(p => x.g.startsWith(p)) || x.g) : '';
 
