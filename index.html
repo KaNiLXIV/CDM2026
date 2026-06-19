@@ -84,22 +84,6 @@
   /* ── Layout ── */
   main { max-width: 840px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 
-  /* ── Toolbar ── */
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
-  .fb {
-    padding: 7px 16px;
-    border-radius: 20px;
-    border: 1px solid var(--bd2);
-    background: var(--surface);
-    color: var(--muted);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all .15s;
-    font-family: inherit;
-  }
-  .fb:hover { border-color: var(--accent); color: var(--text); }
-  .fb.on    { background: var(--accent); border-color: var(--accent); color: #fff; }
-
   /* ── Legend ── */
   .legend      { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: 12px; color: var(--muted); align-items: center; }
   .legend-item { display: flex; align-items: center; gap: 5px; }
@@ -238,12 +222,8 @@
 </div>
 
 <main>
-  <div class="toolbar" id="toolbar">
-    <button class="fb on" data-f="all">Tous les matchs</button>
-    <button class="fb" data-f="m6">M6 gratuit</button>
-    <button class="fb" data-f="fr">France</button>
-    <button class="fb" data-f="ko">Phases finales</button>
-  </div>
+  <button id="stoggle"><i class="sarrow">▶</i> Classements des groupes</button>
+  <div id="standings"></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Prochain match</div>
@@ -251,8 +231,6 @@
     <div class="legend-item"><span class="badge badge-m6">M6</span>Gratuit</div>
     <div class="legend-item"><span class="badge badge-bein">beIN</span>Abonnement</div>
   </div>
-  <button id="stoggle"><i class="sarrow">▶</i> Classements des groupes</button>
-  <div id="standings"></div>
   <div id="cal"></div>
 </main>
 
@@ -414,7 +392,6 @@ const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
 const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── State ──────────────────────────────────────────────────────────────────
-let activeFilter = 'all';
 let scoreMap     = {}; // utcKey → { hs, as, st:'live'|'ht'|'ft'|'sched', min }
 let scoreMapArr  = {}; // utcKey → ordered array (handles simultaneous matches)
 
@@ -610,14 +587,10 @@ function channelBadge(m) {
   return '<span class="badge badge-bein">beIN</span>';
 }
 
-function render(filter) {
+function render() {
   const cal  = document.getElementById('cal');
   const next = nextMatchUtc();
-
-  let list = MATCHES;
-  if (filter === 'm6') list = MATCHES.filter(x => x.tv === 'm6');
-  else if (filter === 'fr') list = MATCHES.filter(x => x.fr);
-  else if (filter === 'ko') list = MATCHES.filter(x => x.ph === 'ko');
+  const list = MATCHES;
 
   if (!list.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
 
@@ -693,10 +666,7 @@ function jumpToActive() {
   if (!target) return;
 
   if (!document.querySelector(`[data-utc="${target.utc}"]`)) {
-    document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
-    document.querySelector('.fb[data-f="all"]').classList.add('on');
-    activeFilter = 'all';
-    render(activeFilter);
+    render();
   }
 
   setTimeout(() => {
@@ -706,18 +676,9 @@ function jumpToActive() {
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
-document.getElementById('toolbar').addEventListener('click', e => {
-  const btn = e.target.closest('.fb');
-  if (!btn) return;
-  document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  activeFilter = btn.dataset.f;
-  render(activeFilter);
-});
-
 async function refresh() {
   await fetchScores();
-  render(activeFilter);
+  render();
   renderStandings();
   // Refresh plus fréquent si match(s) en cours
   const hasLive = MATCHES.some(x => { const s = scoreMap[utcKey(x.utc)]; return s && (s.st === 'live' || s.st === 'ht'); });
@@ -730,7 +691,7 @@ document.getElementById('stoggle').addEventListener('click', () => {
   renderStandings();
 });
 
-render(activeFilter); // Affichage immédiat avec détection locale
+render(); // Affichage immédiat avec détection locale
 refresh();            // Puis fetch ESPN + refresh planifié
 </script>
 </body>
