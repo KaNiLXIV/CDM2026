@@ -247,9 +247,11 @@
   .gtable tr.st-q3ok { background: rgba(205,120,50,0.10); }
   .gtable tr.st-q3ok td { border-top-color: rgba(205,120,50,0.22); }
   .gt-q-dot3 { width: 5px; height: 5px; border-radius: 50%; background: #cd7832; flex-shrink: 0; opacity: .8; }
-  /* Ligne France */
-  .gtable tr.st-fr { background: var(--fr-bg); }
-  .gtable tr.st-fr td { border-top-color: rgba(0,35,149,0.30); }
+  /* Groupe France */
+  .gtable.fr-group { border-color: rgba(0,35,149,0.50); }
+  .gtable.fr-group .gtable-head { color: #7ba7ff; background: rgba(0,35,149,0.18); border-bottom-color: rgba(0,35,149,0.35); }
+  .gtable.fr-group td { border-top-color: rgba(0,35,149,0.20); }
+  .gtable.fr-group th { color: #4d6a9a; }
   .gt-team { display: flex; align-items: center; gap: 4px; min-width: 0; }
   .gt-team .gt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
   .gt-team .fi { font-size: .9em; border-radius: 2px; flex-shrink: 0; }
@@ -567,17 +569,17 @@ function renderStandings() {
 
   groupOrder.forEach(gname => {
     const rows = rowsByGroup[gname];
-    html += `<div class="gtable"><div class="gtable-head">${gname}</div>
+    const isFrGroup = gname === 'Groupe I';
+    html += `<div class="gtable${isFrGroup ? ' fr-group' : ''}"><div class="gtable-head">${gname}</div>
       <table><thead><tr>
         <th>Équipe</th><th title="Joués">J</th><th title="Victoires">V</th>
         <th title="Nuls">N</th><th title="Défaites">D</th>
         <th title="Différence de buts">+/-</th><th title="Points">Pts</th>
       </tr></thead><tbody>`;
     rows.forEach((r, i) => {
-      const isFr   = r.name === 'France';
       const is3rd  = i === 2;
       const is3rdQ = is3rd && anyResults && qualifiedThirds.has(r.name);
-      const cls    = isFr ? 'st-fr' : i < 2 ? 'st-q1' : is3rdQ ? 'st-q3ok' : '';
+      const cls    = i < 2 ? 'st-q1' : is3rdQ ? 'st-q3ok' : '';
       const gdVal  = r.gd > 0 ? `<span class="gt-gd-pos">+${r.gd}</span>`
                    : r.gd < 0 ? `<span class="gt-gd-neg">${r.gd}</span>`
                    : '0';
