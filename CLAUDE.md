@@ -56,14 +56,57 @@ Sections JS séparées par des commentaires `── Nom ──` :
 
 ## Structure de `bracket.html`
 
-Colonnes horizontales défilables, une par tour :
+**Bracket double sens** (arbre symétrique) — pas de défilement, tout tient en une fenêtre :
 
-`16es de finale` → `8es de finale` → `Quarts` → `Demis` → `Finale`
+```
+16es | 8es | Quarts | Demis |  Finale  | Demis | Quarts | 8es | 16es
+ ←————————————————————————————→  ←————————————————————————————→
+       côté gauche (matchs 1-8)       côté droit (matchs 9-16)
+```
 
-- Connecteurs SVG tracés dynamiquement par `drawConnectors()` selon les positions DOM réelles
+La **Finale est au centre**, flanquée des deux demis. La petite finale s'affiche sous la finale dans la colonne centrale, sans connecteurs.
+
+### Positionnement vertical
+
+```js
+step(idx)        = 2^idx * (CARD_H + PAIR_GAP)   // distance centre-à-centre
+roundGap(idx)    = step(idx) - CARD_H             // gap CSS entre cartes
+firstCenter(idx) = firstCenter(idx-1) + step(idx-1)/2  // Y du 1er centre
+topOffset(idx)   = firstCenter(idx) - CARD_H/2    // paddingTop de la colonne
+```
+
+`CARD_H` est **mesuré dynamiquement** après le premier rendu (évite les décalages dus au rendu CSS). `PAIR_GAP = 6`.
+
+La **Finale utilise `idx=3`** (même niveau que les demis) — dans un bracket symétrique les deux SF convergent horizontalement, pas verticalement.
+
+### Connecteurs SVG
+
+`drawConnectors()` trace des lignes en L entre chaque carte source et sa destination :
+- Côté gauche : `dir='ltr'` — bord droit source → bord gauche dest
+- Côté droit : `dir='rtl'` — bord gauche source → bord droit dest
+
+Les coordonnées DOM (`getBoundingClientRect`) sont divisées par `currentScale` pour rester dans l'espace de coordonnées SVG (qui est à l'intérieur de l'élément scalé).
+
+### Auto-scale
+
+```js
+currentScale = Math.min(availW / bW, availH / bH, 1.1)
+bracket.style.transform = `scale(${currentScale})`
+```
+
+Cap à `1.1` (jusqu'à +10 % si l'espace le permet). Recalculé au `resize`. Les connecteurs SVG sont redessinés après le scale.
+
+### Données MATCHES_KO
+
+- **16 matchs** en `g:"r32"` (16es de finale, matchs 1–16)
+- **8 matchs** en `g:"r16"` (8es de finale, matchs 1–8)
+- **4 matchs** en `g:"qf"`, **2** en `g:"sf"`, **1** en `g:"final"`, **1** en `g:"third"`
+
+Les 8 matchs r16 sont partagés 4/4 entre côté gauche et droit ; idem pour les 4 qf (2/2) et les 2 sf (1/1).
+
 - Même logique ESPN + refresh que `index.html`
-- Noms d'équipes mis à jour depuis ESPN dès qu'ils sont connus
-- Lien retour vers `index.html`
+- Noms d'équipes mis à jour depuis ESPN dès qu'ils sont connus (`m.m = "Équipe A - Équipe B"`)
+- Format date dans les cartes : `"Dim 28 juin · 21:00"` (mois visible avant l'heure)
 
 ## Source de données
 
