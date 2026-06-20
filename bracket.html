@@ -568,7 +568,7 @@ function autoScale() {
   const bW     = bracket.scrollWidth;
   const bH     = bracket.scrollHeight;
 
-  currentScale = Math.min(availW / bW, availH / bH, 1);
+  currentScale = Math.min(availW / bW, availH / bH, 1.1);
   bracket.style.transform = `scale(${currentScale})`;
 }
 
