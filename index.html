@@ -478,6 +478,8 @@ async function fetchScores() {
         as: away?.score ?? null,
         st: isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
         min: isHT ? 'MT' : (comp.status?.displayClock || ''),
+        hname: home?.team?.shortDisplayName,
+        aname: away?.team?.shortDisplayName,
       };
       const key = utcKey(ev.date);
       scoreMap[key] = entry;
@@ -485,16 +487,16 @@ async function fetchScores() {
       newArr[key].push(entry);
     });
     scoreMapArr = newArr;
+    const bucketIdx = {};
     MATCHES.forEach(m => {
       if (m.ph !== 'ko') return;
-      const s = scoreMap[utcKey(m.utc)];
-      if (!s) return;
-      const home = (data.events || []).find(ev => utcKey(ev.date) === utcKey(m.utc))
-        ?.competitions?.[0]?.competitors;
-      if (!home) return;
-      const hn = home.find(c => c.homeAway === 'home')?.team?.shortDisplayName;
-      const an = home.find(c => c.homeAway === 'away')?.team?.shortDisplayName;
-      if (hn && an) m.m = `${hn} - ${an}`;
+      const key = utcKey(m.utc);
+      if (bucketIdx[key] === undefined) bucketIdx[key] = 0;
+      const arr = scoreMapArr[key];
+      const s   = arr && arr[bucketIdx[key]];
+      bucketIdx[key]++;
+      if (!s || !s.hname || !s.aname) return;
+      m.m = `${s.hname} - ${s.aname}`;
     });
     return true;
   } catch { return false; }
@@ -607,8 +609,8 @@ function liveLabel(m) {
     if (s.min) return s.min;
   }
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
-  if (elapsed >= 45 && elapsed <= 70) return 'Mi-temps';
-  return elapsed < 45 ? '1ère mi-temps' : '2ème mi-temps';
+  if (elapsed >= 46 && elapsed < 62) return 'Mi-temps';
+  return elapsed < 46 ? '1ère mi-temps' : '2ème mi-temps';
 }
 
 function scoreLabel(m) {
