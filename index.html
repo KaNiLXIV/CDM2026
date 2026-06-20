@@ -494,7 +494,7 @@ async function fetchScores() {
       if (!home) return;
       const hn = home.find(c => c.homeAway === 'home')?.team?.shortDisplayName;
       const an = home.find(c => c.homeAway === 'away')?.team?.shortDisplayName;
-      if (hn && an && FLAG[hn] && FLAG[an]) m.m = `${hn} - ${an}`;
+      if (hn && an) m.m = `${hn} - ${an}`;
     });
     return true;
   } catch { return false; }
@@ -784,7 +784,7 @@ async function refresh() {
   updateFranceKoFlags();
   render();
   renderStandings();
-  const hasLive = MATCHES.some(x => { const s = scoreMap[utcKey(x.utc)]; return s && (s.st === 'live' || s.st === 'ht'); });
+  const hasLive = MATCHES.some(x => { const st = matchState(x); return st === 'live' || st === 'ht'; });
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
 
