@@ -302,6 +302,22 @@
     <div class="sidebar-body">
       <p class="standings-label">Classements des groupes</p>
       <div id="standings"></div>
+      <a href="bracket.html" style="
+        display:flex; align-items:center; gap:7px;
+        margin:12px 10px 4px;
+        padding:8px 12px;
+        border:1px solid var(--bd2);
+        border-radius:var(--r);
+        font-size:12px; font-weight:600; color:var(--muted);
+        text-decoration:none;
+        background:var(--bg);
+        transition:border-color .15s, color .15s, background .15s;
+      " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)';this.style.background='var(--surf2)'"
+         onmouseout="this.style.borderColor='var(--bd2)';this.style.color='var(--muted)';this.style.background='var(--bg)'">
+        <span style="font-size:14px">🏆</span>
+        <span>Tableau du tournoi</span>
+        <span style="margin-left:auto;opacity:.5">→</span>
+      </a>
     </div>
   </div>
 

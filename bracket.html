@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau — Coupe du Monde 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css">
+<style>
+  :root {
+    --bg:      #0c1810;
+    --surface: #122016;
+    --surf2:   #1a2e1e;
+    --bd:      rgba(255,255,255,0.06);
+    --bd2:     rgba(255,255,255,0.11);
+    --bd3:     rgba(255,255,255,0.18);
+    --text:    #ecfdf5;
+    --muted:   #4d7a55;
+    --accent:  #4ade80;
+    --fr-bg:   rgba(0,35,149,0.20);
+    --fr-bd:   #002395;
+    --lv-bd:   #f87171;
+    --lv-c:    #f87171;
+    --gold:    #fbbf24;
+    --m6-bg:   rgba(74,222,128,0.12);
+    --m6-tx:   #86efac;
+    --r:       8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--bd);
+    background: linear-gradient(180deg, #091410 0%, var(--surface) 100%);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 1rem; }
+
+  .back-link {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border: 1px solid var(--bd2);
+    border-radius: 20px;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .back-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  .header-title { display: flex; flex-direction: column; }
+  .eyebrow { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+
+  #stime { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+
+  /* ── Legend ── */
+  .legend-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 7px 1.5rem;
+    border-bottom: 1px solid var(--bd);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Bracket scroll container ── */
+  .bracket-outer {
+    flex: 1;
+    overflow: auto;
+    padding: 24px 32px 48px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bd2) transparent;
+  }
+  .bracket-outer::-webkit-scrollbar { width: 4px; height: 4px; }
+  .bracket-outer::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+  /* ── Bracket ── */
+  .bracket {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: max-content;
+    position: relative;
+  }
+
+  /* SVG connector overlay — sized by JS */
+  #connectors {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* ── Round column ── */
+  .round {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+
+  .round-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    padding-left: 2px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .round-matches {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+  }
+
+  /* Spacer between rounds (for connector lines) */
+  .connector-gap {
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  /* ── Match card ── */
+  .bm {
+    width: 186px;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    background: var(--surface);
+    overflow: hidden;
+    transition: border-color .15s, background .15s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .bm:hover { border-color: var(--bd3); background: var(--surf2); }
+  .bm.fr  { border-color: var(--fr-bd); background: var(--fr-bg); }
+  .bm.lv  { border-color: var(--lv-bd); }
+  .bm.fn  { border-color: var(--gold); background: rgba(251,191,36,0.05); }
+
+  .bm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 8px 4px;
+    border-bottom: 1px solid var(--bd);
+  }
+  .bm-date  { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .bm-status-live { font-size: 10px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
+  .bm-status-ft   { font-size: 10px; color: var(--muted); letter-spacing: .02em; }
+  .bm-badge-m6 { font-size: 9px; padding: 1px 5px; border-radius: 20px; font-weight: 600;
+                  background: var(--m6-bg); color: var(--m6-tx); }
+
+  .bm-teams { padding: 5px 8px 6px; display: flex; flex-direction: column; gap: 4px; }
+
+  .bm-team {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .bm-team .fi  { font-size: 1em; border-radius: 2px; flex-shrink: 0; }
+  .bm-tname {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .bm-tname.ko   { color: var(--muted); font-style: italic; font-weight: 400; }
+  .bm-tscore {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 14px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .bm-tscore.win { color: var(--text); }
+  .bm-tscore.lv  { color: var(--lv-c); }
+
+  /* France row highlight inside bracket card */
+  .bm.fr .bm-tname { color: #c8d8ff; }
+
+  /* ── Spacing between cards per round ── */
+  /* Gaps are set inline by JS based on round size */
+
+  footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--bd);
+  }
+
+  @media (max-width: 500px) {
+    .app-header { padding: 0.6rem 1rem; }
+    .bracket-outer { padding: 16px 12px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="app-header">
+    <div class="header-left">
+      <a href="index.html" class="back-link">← Matchs</a>
+      <div class="header-title">
+        <span class="eyebrow">FIFA World Cup 2026</span>
+        <h1>Tableau de la phase finale</h1>
+      </div>
+    </div>
+    <span id="stime"></span>
+  </header>
+
+  <div class="legend-bar">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Finale</div>
+  </div>
+
+  <div class="bracket-outer">
+    <div class="bracket" id="bracket">
+      <svg id="connectors"></svg>
+
+      <div class="round" id="col-r32">
+        <div class="round-label">16es de finale</div>
+        <div class="round-matches" id="r32"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+
+      <div class="round" id="col-r16">
+        <div class="round-label">8es de finale</div>
+        <div class="round-matches" id="r16"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+
+      <div class="round" id="col-qf">
+        <div class="round-label">Quarts de finale</div>
+        <div class="round-matches" id="qf"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+
+      <div class="round" id="col-sf">
+        <div class="round-label">Demi-finales</div>
+        <div class="round-matches" id="sf"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+
+      <div class="round" id="col-f">
+        <div class="round-label">Finale</div>
+        <div class="round-matches" id="rf"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Horaires en heure française &middot; Scores ESPN</footer>
+</div>
+
+<script>
+// ── Données (phases finales uniquement) ───────────────────────────────────
+const MATCHES_KO = [
+  // 16es de finale
+  {utc:"2026-06-28T19:00Z",t:"21:00",m:"16e #1",  g:"r32", tv:"",    v:"Kansas City"},
+  {utc:"2026-06-28T22:00Z",t:"00:00",m:"16e #2",  g:"r32", tv:"",    v:"Los Angeles"},
+  {utc:"2026-06-29T20:30Z",t:"22:30",m:"16e #3",  g:"r32", tv:"",    v:"Dallas"},
+  {utc:"2026-06-29T22:00Z",t:"00:00",m:"16e #4",  g:"r32", tv:"",    v:"Miami"},
+  {utc:"2026-06-30T02:00Z",t:"04:00",m:"16e #5",  g:"r32", tv:"",    v:"San Francisco"},
+  {utc:"2026-06-30T21:00Z",t:"23:00",m:"16e #6",  g:"r32", tv:"m6",  v:"New York",       fr:0, frIf:["1I"]},
+  {utc:"2026-07-01T03:00Z",t:"05:00",m:"16e #7",  g:"r32", tv:"",    v:"Seattle"},
+  {utc:"2026-07-01T16:00Z",t:"18:00",m:"16e #8",  g:"r32", tv:"",    v:"Boston"},
+  {utc:"2026-07-01T23:00Z",t:"01:00",m:"16e #9",  g:"r32", tv:"",    v:"Guadalajara"},
+  {utc:"2026-07-02T19:00Z",t:"21:00",m:"16e #10", g:"r32", tv:"",    v:"Monterrey"},
+  {utc:"2026-07-03T19:00Z",t:"21:00",m:"16e #11", g:"r32", tv:"",    v:"Vancouver"},
+  {utc:"2026-07-03T23:00Z",t:"01:00",m:"16e #12", g:"r32", tv:"",    v:"Atlanta"},
+  {utc:"2026-07-04T03:00Z",t:"05:00",m:"16e #13", g:"r32", tv:"",    v:"Mexico City"},
+  {utc:"2026-07-05T18:00Z",t:"20:00",m:"16e #14", g:"r32", tv:"",    v:"Philadelphie"},
+  {utc:"2026-07-05T22:00Z",t:"00:00",m:"16e #15", g:"r32", tv:"",    v:"Toronto"},
+  {utc:"2026-07-06T19:00Z",t:"21:00",m:"16e #16", g:"r32", tv:"",    v:"Los Angeles - Rose Bowl"},
+  {utc:"2026-07-06T23:00Z",t:"01:00",m:"16e #17", g:"r32", tv:"",    v:"Montréal"},
+  // 8es de finale
+  {utc:"2026-07-08T19:00Z",t:"21:00",m:"8e #1",   g:"r16", tv:"m6",  v:"New York",       fr:0, frIf:["1I"]},
+  {utc:"2026-07-09T01:00Z",t:"03:00",m:"8e #2",   g:"r16", tv:"m6",  v:"Dallas"},
+  {utc:"2026-07-09T19:00Z",t:"21:00",m:"8e #3",   g:"r16", tv:"m6",  v:"Los Angeles"},
+  {utc:"2026-07-10T01:00Z",t:"03:00",m:"8e #4",   g:"r16", tv:"m6",  v:"Miami"},
+  // Quarts de finale
+  {utc:"2026-07-12T19:00Z",t:"21:00",m:"Quart #1",g:"qf",  tv:"m6",  v:"Kansas City"},
+  {utc:"2026-07-13T01:00Z",t:"03:00",m:"Quart #2",g:"qf",  tv:"m6",  v:"Los Angeles - Rose Bowl"},
+  {utc:"2026-07-13T19:00Z",t:"21:00",m:"Quart #3",g:"qf",  tv:"m6",  v:"Dallas"},
+  {utc:"2026-07-14T01:00Z",t:"03:00",m:"Quart #4",g:"qf",  tv:"m6",  v:"San Francisco"},
+  // Demi-finales
+  {utc:"2026-07-15T19:00Z",t:"21:00",m:"Demi #1", g:"sf",  tv:"m6",  v:"Atlanta"},
+  {utc:"2026-07-16T19:00Z",t:"21:00",m:"Demi #2", g:"sf",  tv:"m6",  v:"Dallas"},
+  // Petite finale + Finale
+  {utc:"2026-07-18T19:00Z",t:"21:00",m:"Petite finale", g:"third", tv:"m6", v:"Miami"},
+  {utc:"2026-07-19T19:00Z",t:"21:00",m:"Finale",        g:"final",  tv:"m6", v:"New York", final:1},
+];
+
+// ── Drapeaux ──────────────────────────────────────────────────────────────
+const FLAG = {
+  'Afrique du Sud':'za',    'Algérie':'dz',           'Allemagne':'de',
+  'Angleterre':'gb-eng',    'Arabie saoudite':'sa',    'Argentine':'ar',
+  'Australie':'au',         'Autriche':'at',           'Belgique':'be',
+  'Bosnie-Herzégovine':'ba','Brésil':'br',             'Canada':'ca',
+  'Cap-Vert':'cv',          'Colombie':'co',           'Corée du Sud':'kr',
+  'Croatie':'hr',           'Curaçao':'cw',            "Côte d'Ivoire":'ci',
+  'Espagne':'es',           'France':'fr',             'Ghana':'gh',
+  'Haïti':'ht',             'Irak':'iq',               'Iran':'ir',
+  'Japon':'jp',             'Jordanie':'jo',           'Maroc':'ma',
+  'Mexique':'mx',           'Norvège':'no',            'Nouvelle-Zélande':'nz',
+  'Ouzbékistan':'uz',       'Panama':'pa',             'Paraguay':'py',
+  'Pays-Bas':'nl',          'Portugal':'pt',           'Qatar':'qa',
+  'RD Congo':'cd',          'Rép. tchèque':'cz',       'Suisse':'ch',
+  'Suède':'se',             'Sénégal':'sn',            'Tunisie':'tn',
+  'Turquie':'tr',           'Uruguay':'uy',            'Écosse':'gb-sct',
+  'Égypte':'eg',            'Équateur':'ec',           'États-Unis':'us',
+};
+
+// ── Constantes ────────────────────────────────────────────────────────────
+const DUR_KO   = 160 * 60 * 1000;
+const DAYS     = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const MONTHS   = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
+
+// ── State ─────────────────────────────────────────────────────────────────
+let scoreMap = {};
+
+function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
+
+// ── ESPN ──────────────────────────────────────────────────────────────────
+async function fetchScores() {
+  try {
+    const r = await fetch(ESPN_URL);
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    scoreMap = {};
+    (data.events || []).forEach(ev => {
+      const comp = ev.competitions?.[0];
+      if (!comp) return;
+      const sn   = comp.status?.type?.name || '';
+      const isLv = sn === 'STATUS_IN_PROGRESS';
+      const isHT = sn === 'STATUS_HALFTIME';
+      const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const home = comp.competitors?.find(c => c.homeAway === 'home');
+      const away = comp.competitors?.find(c => c.homeAway === 'away');
+      scoreMap[utcKey(ev.date)] = {
+        hs: home?.score ?? null,
+        as: away?.score ?? null,
+        st: isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min: isHT ? 'MT' : (comp.status?.displayClock || ''),
+        hname: home?.team?.shortDisplayName,
+        aname: away?.team?.shortDisplayName,
+      };
+    });
+    // Mettre à jour les noms d'équipes KO dès qu'ESPN les connaît
+    MATCHES_KO.forEach(m => {
+      const s = scoreMap[utcKey(m.utc)];
+      if (!s || !s.hname || !s.aname) return;
+      if (FLAG[s.hname] && FLAG[s.aname]) m.m = `${s.hname} - ${s.aname}`;
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Logique temporelle ────────────────────────────────────────────────────
+function matchState(m) {
+  const s = scoreMap[utcKey(m.utc)];
+  if (s && s.st !== 'sched') return s.st;
+  const elapsed = Date.now() - new Date(m.utc).getTime();
+  if (elapsed >= 0 && elapsed < DUR_KO) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
+  if (elapsed >= DUR_KO) return 'ft';
+  return 'sched';
+}
+
+function dayLabel(utc) {
+  const d = new Date(new Date(utc).toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+// ── Rendu d'une carte de match ─────────────────────────────────────────────
+function cardHtml(m) {
+  const s    = scoreMap[utcKey(m.utc)];
+  const st   = matchState(m);
+  const isLv = st === 'live' || st === 'ht';
+  const isFT = st === 'ft';
+
+  // Décomposer le nom du match
+  const parts = m.m.split(' - ');
+  const hasTeams = parts.length === 2;
+  const [ta, tb] = hasTeams ? parts : [m.m, null];
+
+  // Scores
+  let hs = null, as_ = null;
+  if (s && s.hs !== null && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
+
+  const scoreWin = (score, other) => {
+    if (score === null) return '';
+    const cls = isLv ? 'lv' : (isFT && score > other ? 'win' : '');
+    return `<span class="bm-tscore ${cls}">${score}</span>`;
+  };
+
+  // Status badge
+  let statusHtml = `<span class="bm-date">${m.t} · ${dayLabel(m.utc).slice(0,6)}</span>`;
+  let badgeHtml  = '';
+  if (isLv) {
+    const min = s?.min || (st === 'ht' ? 'MT' : '');
+    statusHtml = `<span class="bm-status-live">⬤ ${min || 'LIVE'}</span>`;
+  } else if (isFT) {
+    statusHtml = `<span class="bm-date">${m.t} · ${dayLabel(m.utc).slice(0,6)}</span>`;
+    badgeHtml  = `<span class="bm-status-ft">FT</span>`;
+  }
+  if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
+
+  // Team rows
+  function teamRow(name, score, other) {
+    if (!name) return '';
+    const code = FLAG[name];
+    const flag = code ? `<span class="fi fi-${code}"></span>` : '';
+    const isTbd = !hasTeams || parts.length < 2;
+    const tname = isTbd ? `<span class="bm-tname ko">${name}</span>` : `<span class="bm-tname">${name}</span>`;
+    const sc    = score !== null ? scoreWin(score, other) : '';
+    return `<div class="bm-team">${flag}${tname}${sc}</div>`;
+  }
+
+  const cls = ['bm', isLv ? 'lv' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+
+  return `<div class="${cls}" data-utc="${m.utc}">
+    <div class="bm-head">${statusHtml}${badgeHtml}</div>
+    <div class="bm-teams">
+      ${teamRow(ta, hs, as_)}
+      ${tb ? teamRow(tb, as_, hs) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
+    </div>
+  </div>`;
+}
+
+// ── Calcul du gap entre cartes pour centrage par round ────────────────────
+// CARD_H = hauteur d'une carte (px), GAP_BASE = gap entre cartes du round précédent
+const CARD_H   = 82; // hauteur approximative d'une bm card
+const PAIR_GAP = 8;  // gap entre les 2 cartes d'une paire dans R32
+
+function roundGap(roundIdx) {
+  // roundIdx : 0=r32, 1=r16, 2=qf, 3=sf, 4=f
+  // Chaque round double le slot: gap(N) = 2*(CARD_H + gap(N-1)) - CARD_H
+  if (roundIdx === 0) return PAIR_GAP;
+  const slotPrev = CARD_H + roundGap(roundIdx - 1);
+  return 2 * slotPrev - CARD_H;
+}
+
+function topOffset(roundIdx) {
+  // Décalage du premier élément depuis le haut pour centrage
+  if (roundIdx === 0) return 0;
+  const slot = CARD_H + roundGap(roundIdx - 1);
+  return slot / 2 - CARD_H / 2;
+}
+
+// ── Rendu du bracket ──────────────────────────────────────────────────────
+function render() {
+  const byRound = { r32: [], r16: [], qf: [], sf: [], third: [], final: [] };
+  MATCHES_KO.forEach(m => { if (byRound[m.g]) byRound[m.g].push(m); });
+
+  const rounds = [
+    { id: 'r32',   matches: byRound.r32,   idx: 0 },
+    { id: 'r16',   matches: byRound.r16,   idx: 1 },
+    { id: 'qf',    matches: byRound.qf,    idx: 2 },
+    { id: 'sf',    matches: byRound.sf,    idx: 3 },
+    { id: 'rf',    matches: [...byRound.third, ...byRound.final], idx: 4 },
+  ];
+
+  rounds.forEach(({ id, matches, idx }) => {
+    const col = document.getElementById(id);
+    const gap = roundGap(idx);
+    const top = topOffset(idx);
+    col.style.gap = gap + 'px';
+    col.style.paddingTop = top + 'px';
+    col.innerHTML = matches.map(m => cardHtml(m)).join('');
+  });
+
+  document.getElementById('stime').textContent =
+    new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  // Délai pour que le DOM soit peint avant de tracer les connecteurs
+  requestAnimationFrame(drawConnectors);
+}
+
+// ── Connecteurs SVG entre rounds ──────────────────────────────────────────
+function drawConnectors() {
+  const svg = document.getElementById('connectors');
+  const bracket = document.getElementById('bracket');
+  const bracketRect = bracket.getBoundingClientRect();
+
+  // Paires : r32→r16, r16→qf, qf→sf, sf→final
+  const pairDefs = [
+    { fromId: 'r32', toId: 'r16', ratio: 2 },  // 2 r32 → 1 r16 (approximatif, 17 matches)
+    { fromId: 'r16', toId: 'qf',  ratio: 1 },  // 1 r16 → 1 qf  (approximatif)
+    { fromId: 'qf',  toId: 'sf',  ratio: 2 },  // 2 qf  → 1 sf
+    { fromId: 'sf',  toId: 'rf',  ratio: 1 },  // 1 sf  → 1 final (les 2 demis → finale)
+  ];
+
+  let paths = '';
+
+  pairDefs.forEach(({ fromId, toId, ratio }) => {
+    const fromCards = [...document.getElementById(fromId).querySelectorAll('.bm')];
+    const toCards   = [...document.getElementById(toId).querySelectorAll('.bm')];
+    if (!fromCards.length || !toCards.length) return;
+
+    toCards.forEach((toCard, ti) => {
+      const toRect = toCard.getBoundingClientRect();
+      const toMidY = toRect.top + toRect.height / 2 - bracketRect.top;
+      const toX    = toRect.left - bracketRect.left;
+
+      const pairs = fromCards.slice(ti * ratio, ti * ratio + ratio);
+      if (!pairs.length) return;
+
+      const fromRects = pairs.map(c => c.getBoundingClientRect());
+      const fromX = fromRects[0].right - bracketRect.left;
+      const topY  = fromRects[0].top  + fromRects[0].height / 2 - bracketRect.top;
+      const botY  = fromRects[fromRects.length - 1].top + fromRects[fromRects.length - 1].height / 2 - bracketRect.top;
+      const midX  = fromX + (toX - fromX) / 2;
+
+      // Ligne horizontale depuis chaque carte source
+      fromRects.forEach(fr => {
+        const y = fr.top + fr.height / 2 - bracketRect.top;
+        paths += `<line x1="${fromX}" y1="${y}" x2="${midX}" y2="${y}" />`;
+      });
+      // Ligne verticale reliant les sources
+      if (fromRects.length > 1) {
+        paths += `<line x1="${midX}" y1="${topY}" x2="${midX}" y2="${botY}" />`;
+      }
+      // Ligne horizontale vers la carte destination
+      paths += `<line x1="${midX}" y1="${toMidY}" x2="${toX}" y2="${toMidY}" />`;
+    });
+  });
+
+  svg.innerHTML = `<g stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none">${paths}</g>`;
+
+  // Taille du SVG = taille du bracket
+  const bRect = bracket.getBoundingClientRect();
+  svg.setAttribute('width',  bRect.width);
+  svg.setAttribute('height', bRect.height);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function refresh() {
+  await fetchScores();
+  render();
+  const hasLive = MATCHES_KO.some(m => {
+    const s = scoreMap[utcKey(m.utc)];
+    return s && (s.st === 'live' || s.st === 'ht');
+  });
+  setTimeout(refresh, hasLive ? 30000 : 120000);
+}
+
+window.addEventListener('resize', drawConnectors);
+
+render();
+refresh();
+</script>
+</body>
+</html>
