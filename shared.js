@@ -18,6 +18,26 @@ const FLAG = {
   'Égypte':'eg',            'Équateur':'ec',           'États-Unis':'us',
 };
 
+// Traduction noms ESPN (anglais) → noms français
+const TEAM_EN_FR = {
+  'Algeria':'Algérie',           'Argentina':'Argentine',       'Australia':'Australie',
+  'Austria':'Autriche',          'Belgium':'Belgique',          'Bosnia-Herzegovina':'Bosnie-Herzégovine',
+  'Brazil':'Brésil',             'Canada':'Canada',             'Cape Verde':'Cap-Vert',
+  'Colombia':'Colombie',         'Congo DR':'RD Congo',         'Croatia':'Croatie',
+  'Curaçao':'Curaçao',           'Ivory Coast':"Côte d'Ivoire", 'Czechia':'Rép. tchèque',
+  'Ecuador':'Équateur',          'Egypt':'Égypte',              'England':'Angleterre',
+  'France':'France',             'Germany':'Allemagne',         'Ghana':'Ghana',
+  'Haiti':'Haïti',               'Iran':'Iran',                 'Iraq':'Irak',
+  'Japan':'Japon',               'Jordan':'Jordanie',           'Mexico':'Mexique',
+  'Morocco':'Maroc',             'Netherlands':'Pays-Bas',      'New Zealand':'Nouvelle-Zélande',
+  'Norway':'Norvège',            'Panama':'Panama',             'Paraguay':'Paraguay',
+  'Portugal':'Portugal',         'Qatar':'Qatar',               'Saudi Arabia':'Arabie saoudite',
+  'Scotland':'Écosse',           'Senegal':'Sénégal',           'South Africa':'Afrique du Sud',
+  'South Korea':'Corée du Sud',  'Spain':'Espagne',             'Sweden':'Suède',
+  'Switzerland':'Suisse',        'Tunisia':'Tunisie',           'Türkiye':'Turquie',
+  'United States':'États-Unis',  'Uruguay':'Uruguay',           'Uzbekistan':'Ouzbékistan',
+};
+
 // ── Constantes ────────────────────────────────────────────────────────────
 const DUR_GROUP  = 115 * 60 * 1000;
 const DUR_KO     = 160 * 60 * 1000;
@@ -36,6 +56,12 @@ function dayLabel(utc) {
   const [year, month, day] = ymd.split('-').map(Number);
   const ref = new Date(Date.UTC(year, month - 1, day));
   return `${DAYS[ref.getUTCDay()]} ${day} ${MONTHS[month - 1]}`;
+}
+
+function timeLabel(utc) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(utc));
 }
 
 // ── Fetch ESPN avec cache localStorage (TTL 20 s) ─────────────────────────

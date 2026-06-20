@@ -321,43 +321,43 @@
 <script>
 // ── Données (phases finales uniquement) ───────────────────────────────────
 const MATCHES_KO = [
-  // 16es de finale
-  {utc:"2026-06-28T19:00Z",t:"21:00",m:"16e #1",  g:"r32", tv:"",    v:"Kansas City"},
-  {utc:"2026-06-28T22:00Z",t:"00:00",m:"16e #2",  g:"r32", tv:"",    v:"Los Angeles"},
-  {utc:"2026-06-29T20:30Z",t:"22:30",m:"16e #3",  g:"r32", tv:"",    v:"Dallas"},
-  {utc:"2026-06-29T22:00Z",t:"00:00",m:"16e #4",  g:"r32", tv:"",    v:"Miami"},
-  {utc:"2026-06-30T02:00Z",t:"04:00",m:"16e #5",  g:"r32", tv:"",    v:"San Francisco"},
-  {utc:"2026-06-30T21:00Z",t:"23:00",m:"16e #6",  g:"r32", tv:"m6",  v:"New York",       fr:0, frIf:["1I"]},
-  {utc:"2026-07-01T03:00Z",t:"05:00",m:"16e #7",  g:"r32", tv:"",    v:"Seattle"},
-  {utc:"2026-07-01T16:00Z",t:"18:00",m:"16e #8",  g:"r32", tv:"",    v:"Boston"},
-  {utc:"2026-07-01T23:00Z",t:"01:00",m:"16e #9",  g:"r32", tv:"",    v:"Guadalajara"},
-  {utc:"2026-07-02T19:00Z",t:"21:00",m:"16e #10", g:"r32", tv:"",    v:"Monterrey"},
-  {utc:"2026-07-03T19:00Z",t:"21:00",m:"16e #11", g:"r32", tv:"",    v:"Vancouver"},
-  {utc:"2026-07-03T23:00Z",t:"01:00",m:"16e #12", g:"r32", tv:"",    v:"Atlanta"},
-  {utc:"2026-07-04T03:00Z",t:"05:00",m:"16e #13", g:"r32", tv:"",    v:"Mexico City"},
-  {utc:"2026-07-05T18:00Z",t:"20:00",m:"16e #14", g:"r32", tv:"",    v:"Philadelphie"},
-  {utc:"2026-07-05T22:00Z",t:"00:00",m:"16e #15", g:"r32", tv:"",    v:"Toronto"},
-  {utc:"2026-07-06T19:00Z",t:"21:00",m:"16e #16", g:"r32", tv:"",    v:"Los Angeles - Rose Bowl"},
-  // 8es de finale
-  {utc:"2026-07-08T19:00Z",t:"21:00",m:"8e #1",   g:"r16", tv:"m6",  v:"New York",       fr:0, frIf:["1I"]},
-  {utc:"2026-07-09T01:00Z",t:"03:00",m:"8e #2",   g:"r16", tv:"m6",  v:"Dallas"},
-  {utc:"2026-07-09T19:00Z",t:"21:00",m:"8e #3",   g:"r16", tv:"m6",  v:"Los Angeles"},
-  {utc:"2026-07-10T01:00Z",t:"03:00",m:"8e #4",   g:"r16", tv:"m6",  v:"Miami"},
-  {utc:"2026-07-10T19:00Z",t:"21:00",m:"8e #5",   g:"r16", tv:"m6",  v:"Kansas City"},
-  {utc:"2026-07-11T01:00Z",t:"03:00",m:"8e #6",   g:"r16", tv:"m6",  v:"Seattle"},
-  {utc:"2026-07-11T19:00Z",t:"21:00",m:"8e #7",   g:"r16", tv:"m6",  v:"Atlanta"},
-  {utc:"2026-07-12T01:00Z",t:"03:00",m:"8e #8",   g:"r16", tv:"m6",  v:"Vancouver"},
-  // Quarts de finale
-  {utc:"2026-07-12T19:00Z",t:"21:00",m:"Quart #1",g:"qf",  tv:"m6",  v:"Kansas City"},
-  {utc:"2026-07-13T01:00Z",t:"03:00",m:"Quart #2",g:"qf",  tv:"m6",  v:"Los Angeles - Rose Bowl"},
-  {utc:"2026-07-13T19:00Z",t:"21:00",m:"Quart #3",g:"qf",  tv:"m6",  v:"Dallas"},
-  {utc:"2026-07-14T01:00Z",t:"03:00",m:"Quart #4",g:"qf",  tv:"m6",  v:"San Francisco"},
-  // Demi-finales
-  {utc:"2026-07-15T19:00Z",t:"21:00",m:"Demi #1", g:"sf",  tv:"m6",  v:"Atlanta"},
-  {utc:"2026-07-16T19:00Z",t:"21:00",m:"Demi #2", g:"sf",  tv:"m6",  v:"Dallas"},
-  // Petite finale + Finale
-  {utc:"2026-07-18T19:00Z",t:"21:00",m:"Petite finale", g:"third", tv:"m6", v:"Miami"},
-  {utc:"2026-07-19T19:00Z",t:"21:00",m:"Finale",        g:"final",  tv:"m6", v:"New York", final:1},
+  // ── 16es de finale (left side: slots 0-7, right side: slots 8-15) ────────
+  {espnId:"760486",utc:"2026-06-28T19:00Z",m:"16e #1",  g:"r32"},
+  {espnId:"760489",utc:"2026-06-29T20:30Z",m:"16e #3",  g:"r32"},
+  {espnId:"760487",utc:"2026-06-29T17:00Z",m:"16e #2",  g:"r32"},
+  {espnId:"760490",utc:"2026-06-30T17:00Z",m:"16e #5",  g:"r32",frIf:["2I"]},
+  {espnId:"760493",utc:"2026-07-01T20:00Z",m:"16e #9",  g:"r32"},
+  {espnId:"760494",utc:"2026-07-02T00:00Z",m:"16e #10", g:"r32"},
+  {espnId:"760497",utc:"2026-07-02T19:00Z",m:"16e #11", g:"r32"},
+  {espnId:"760496",utc:"2026-07-02T23:00Z",m:"16e #12", g:"r32"},
+  {espnId:"760488",utc:"2026-06-30T01:00Z",m:"16e #4",  g:"r32"},
+  {espnId:"760492",utc:"2026-06-30T21:00Z",m:"16e #6",  g:"r32",tv:"m6",frIf:["1I"]},
+  {espnId:"760491",utc:"2026-07-01T01:00Z",m:"16e #7",  g:"r32"},
+  {espnId:"760495",utc:"2026-07-01T16:00Z",m:"16e #8",  g:"r32"},
+  {espnId:"760499",utc:"2026-07-03T18:00Z",m:"16e #14", g:"r32"},
+  {espnId:"760501",utc:"2026-07-04T01:30Z",m:"16e #16", g:"r32"},
+  {espnId:"760498",utc:"2026-07-03T03:00Z",m:"16e #13", g:"r32"},
+  {espnId:"760500",utc:"2026-07-03T22:00Z",m:"16e #15", g:"r32"},
+  // ── 8es de finale (left: 0-3, right: 4-7) ────────────────────────────────
+  {espnId:"760502",utc:"2026-07-04T17:00Z",m:"8e #1",   g:"r16",tv:"m6"},
+  {espnId:"760503",utc:"2026-07-04T21:00Z",m:"8e #2",   g:"r16",tv:"m6",frIf:["2I"]},
+  {espnId:"760507",utc:"2026-07-07T00:00Z",m:"8e #6",   g:"r16",tv:"m6"},
+  {espnId:"760506",utc:"2026-07-06T19:00Z",m:"8e #5",   g:"r16",tv:"m6"},
+  {espnId:"760504",utc:"2026-07-05T20:00Z",m:"8e #3",   g:"r16",tv:"m6",frIf:["1I"]},
+  {espnId:"760505",utc:"2026-07-06T00:00Z",m:"8e #4",   g:"r16",tv:"m6"},
+  {espnId:"760509",utc:"2026-07-07T16:00Z",m:"8e #7",   g:"r16",tv:"m6"},
+  {espnId:"760508",utc:"2026-07-07T20:00Z",m:"8e #8",   g:"r16",tv:"m6"},
+  // ── Quarts de finale (left: 0-1, right: 2-3) ─────────────────────────────
+  {espnId:"760510",utc:"2026-07-09T20:00Z",m:"Quart #1",g:"qf", tv:"m6",frIf:["2I"]},
+  {espnId:"760511",utc:"2026-07-10T19:00Z",m:"Quart #2",g:"qf", tv:"m6"},
+  {espnId:"760512",utc:"2026-07-11T21:00Z",m:"Quart #3",g:"qf", tv:"m6",frIf:["1I"]},
+  {espnId:"760513",utc:"2026-07-12T01:00Z",m:"Quart #4",g:"qf", tv:"m6"},
+  // ── Demi-finales ──────────────────────────────────────────────────────────
+  {espnId:"760514",utc:"2026-07-14T19:00Z",m:"Demi #1", g:"sf", tv:"m6",frIf:["2I"]},
+  {espnId:"760515",utc:"2026-07-15T19:00Z",m:"Demi #2", g:"sf", tv:"m6",frIf:["1I"]},
+  // ── Petite finale + Finale ────────────────────────────────────────────────
+  {espnId:"760516",utc:"2026-07-18T21:00Z",m:"Petite finale",g:"third",tv:"m6"},
+  {espnId:"760517",utc:"2026-07-19T19:00Z",m:"Finale",       g:"final", tv:"m6",final:1,frIf:["1I","2I"]},
 ];
 
 
@@ -372,7 +372,7 @@ async function fetchScores() {
   const data = await fetchEspnData();
   if (!data) return false;
   try {
-    scoreMap = {};
+    const newMap = {};
     (data.events || []).forEach(ev => {
       const comp = ev.competitions?.[0];
       if (!comp) return;
@@ -382,19 +382,20 @@ async function fetchScores() {
       const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
       const home = comp.competitors?.find(c => c.homeAway === 'home');
       const away = comp.competitors?.find(c => c.homeAway === 'away');
-      scoreMap[utcKey(ev.date)] = {
-        hs: home?.score ?? null,
-        as: away?.score ?? null,
-        st: isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
-        min: isHT ? 'MT' : (comp.status?.displayClock || ''),
-        hname: home?.team?.shortDisplayName,
-        aname: away?.team?.shortDisplayName,
+      newMap[ev.id] = {
+        hs:    home?.score ?? null,
+        as:    away?.score ?? null,
+        st:    isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:   isHT ? 'MT' : (comp.status?.displayClock || ''),
+        hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
+        aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
       };
     });
+    scoreMap = newMap;
     MATCHES_KO.forEach(m => {
-      const s = scoreMap[utcKey(m.utc)];
+      const s = scoreMap[m.espnId];
       if (!s || !s.hname || !s.aname) return;
-      if (s.hname && s.aname) m.m = `${s.hname} - ${s.aname}`;
+      m.m = `${s.hname} - ${s.aname}`;
     });
     return true;
   } catch { return false; }
@@ -412,7 +413,7 @@ function updateFranceKoFlags() {
 
 // ── Logique temporelle ────────────────────────────────────────────────────
 function matchState(m) {
-  const s = scoreMap[utcKey(m.utc)];
+  const s = scoreMap[m.espnId];
   if (s && s.st !== 'sched') return s.st;
   const elapsed = Date.now() - new Date(m.utc).getTime();
   if (elapsed >= 0 && elapsed < DUR_KO) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
@@ -422,7 +423,7 @@ function matchState(m) {
 
 // ── Rendu d'une carte de match ─────────────────────────────────────────────
 function cardHtml(m) {
-  const s    = scoreMap[utcKey(m.utc)];
+  const s    = scoreMap[m.espnId];
   const st   = matchState(m);
   const isLv = st === 'live' || st === 'ht';
   const isFT = st === 'ft';
@@ -441,7 +442,7 @@ function cardHtml(m) {
   };
 
   // Date avant l'heure
-  let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${m.t}</span>`;
+  let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${timeLabel(m.utc)}</span>`;
   let badgeHtml  = '';
   if (isLv) {
     const min = s?.min || (st === 'ht' ? 'MT' : '');
@@ -612,7 +613,7 @@ async function refresh() {
   updateFranceKoFlags();
   render();
   const hasLive = MATCHES_KO.some(m => {
-    const s = scoreMap[utcKey(m.utc)];
+    const s = scoreMap[m.espnId];
     return s && (s.st === 'live' || s.st === 'ht');
   });
   setTimeout(refresh, hasLive ? 30000 : 120000);
