@@ -394,7 +394,7 @@ async function fetchScores() {
     MATCHES_KO.forEach(m => {
       const s = scoreMap[utcKey(m.utc)];
       if (!s || !s.hname || !s.aname) return;
-      if (FLAG[s.hname] && FLAG[s.aname]) m.m = `${s.hname} - ${s.aname}`;
+      if (s.hname && s.aname) m.m = `${s.hname} - ${s.aname}`;
     });
     return true;
   } catch { return false; }
@@ -514,7 +514,7 @@ function render() {
 
   // Mesurer la hauteur réelle d'une carte
   const sample = document.querySelector('#r32l .bm');
-  if (sample) CARD_H = sample.offsetHeight;
+  if (sample && sample.offsetHeight > 0) CARD_H = sample.offsetHeight;
 
   // Deuxième passage : appliquer les gaps corrects
   cols.forEach(({ id, idx }) => {
