@@ -407,7 +407,12 @@ function updateFranceKoFlags() {
   try { pos = localStorage.getItem('cdm_fr_pos') || ''; } catch {}
   MATCHES_KO.forEach(m => {
     if (!m.frIf) return;
-    m.fr = pos && m.frIf.includes(pos) ? 1 : 0;
+    if (pos) {
+      m.fr = m.frIf.includes(pos) ? 1 : 0;
+    } else {
+      // Position pas encore confirmée : tous les parcours possibles de la France
+      m.fr = m.frIf.some(f => f === '1I' || f === '2I') ? 1 : 0;
+    }
   });
 }
 
