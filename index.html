@@ -535,6 +535,7 @@ function renderStandings() {
   const seen = new Set();
   const groupOrder = [];
   MATCHES.forEach(m => { if (!m.ph && !seen.has(m.g)) { seen.add(m.g); groupOrder.push(m.g); } });
+  groupOrder.sort((a, b) => a.localeCompare(b));
   let html = '';
   const sortFn = (a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name);
   const rowsByGroup = {};
