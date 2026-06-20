@@ -8,30 +8,32 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css">
 <style>
   :root {
-    --bg:      #0a0f1e;
-    --surface: #111827;
-    --surf2:   #1a2236;
-    --bd:      rgba(255,255,255,0.08);
-    --bd2:     rgba(255,255,255,0.14);
-    --text:    #f0f4ff;
-    --muted:   #8494b4;
-    --accent:  #3b7ff5;
-    --fr-bg:   #1a3a6e;
-    --fr-bd:   #3b7ff5;
-    --nx-bg:   rgba(240,192,64,0.07);
-    --nx-bd:   #f0c040;
-    --lv-bg:   rgba(239,68,68,0.08);
-    --lv-bd:   #ef4444;
-    --lv-c:    #ef4444;
-    --gold:    #f0c040;
-    --m6-bg:   rgba(59,127,245,0.15);
-    --m6-tx:   #7bb3ff;
+    --bg:      #0c1810;
+    --surface: #122016;
+    --surf2:   #1a2e1e;
+    --bd:      rgba(255,255,255,0.06);
+    --bd2:     rgba(255,255,255,0.11);
+    --text:    #ecfdf5;
+    --muted:   #4d7a55;
+    --accent:  #4ade80;
+    --fr-bg:   rgba(0,35,149,0.20);
+    --fr-bd:   #002395;
+    --nx-bg:   rgba(251,191,36,0.07);
+    --nx-bd:   #fbbf24;
+    --lv-bg:   rgba(248,113,113,0.07);
+    --lv-bd:   #f87171;
+    --lv-c:    #f87171;
+    --gold:    #fbbf24;
+    --m6-bg:   rgba(74,222,128,0.12);
+    --m6-tx:   #86efac;
     --r:       8px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
+  html, body {
+    height: 100%;
+    overflow: hidden;
     background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -39,44 +41,101 @@
     line-height: 1.5;
   }
 
-  /* ── Header ── */
-  header {
-    border-bottom: 1px solid var(--bd);
-    padding: 2rem 1rem 1.5rem;
-    text-align: center;
-    background: linear-gradient(180deg, #0d1528, var(--bg));
+  /* ── Layout 2 colonnes ── */
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    overflow: hidden;
   }
-  .eyebrow { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  h1       { font-size: clamp(20px, 4vw, 34px); font-weight: 700; letter-spacing: -.02em; margin-bottom: 6px; }
-  .sub     { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
 
-  /* ── Focus card ── */
-  #fcard-wrap {
-    border-bottom: 1px solid var(--bd);
-    padding: 10px 1rem;
+  /* ── Colonne gauche : classements ── */
+  .sidebar {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    color: var(--muted);
+    flex-direction: column;
+    border-right: 1px solid var(--bd);
+    overflow: hidden;
+    background: var(--surface);
   }
-  #stime-wrap { white-space: nowrap; }
+
+  .sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bd2) transparent;
+  }
+
+  .sidebar-body::-webkit-scrollbar { width: 4px; }
+  .sidebar-body::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+  /* ── Colonne droite : matches ── */
+  .main-col {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .matches-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1.25rem 4rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bd2) transparent;
+  }
+
+  .matches-body::-webkit-scrollbar { width: 4px; }
+  .matches-body::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+
+  /* ── App header (pleine largeur) ── */
+  .app-header {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0.8rem 1.5rem;
+    border-bottom: 1px solid var(--bd);
+    background: linear-gradient(180deg, #091410 0%, var(--surface) 100%);
+  }
+  .eyebrow { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1       { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+
+  /* ── Focus card (dans le header) ── */
+  #fcard-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .fcard-meta { display: flex; align-items: center; gap: 8px; }
+  #stime-wrap { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  #fcard-date {
+    display: none;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: capitalize;
+  }
   #fcard {
     display: none;
     align-items: center;
     gap: 10px;
-    background: var(--surface);
+    background: var(--surf2);
     border: 1px solid var(--bd2);
     border-radius: var(--r);
-    padding: 7px 14px;
+    padding: 6px 12px;
     cursor: pointer;
     transition: border-color .15s, background .15s;
     font-size: 13px;
     color: var(--text);
     line-height: 1;
   }
-  #fcard:hover { border-color: var(--accent); background: var(--surf2); }
+  #fcard:hover { border-color: var(--accent); background: #162a1a; }
   #fcard.is-live { border-color: var(--lv-bd); }
   #fcard.is-live:hover { border-color: var(--lv-c); }
   #fcard.is-fr  { border-color: var(--fr-bd); }
@@ -85,28 +144,25 @@
   .fc-timer  { font-size: 13px; font-weight: 700; color: var(--muted); }
   #fcard.is-live .fc-status { color: var(--lv-c); }
   #fcard.is-live .fc-timer  { color: var(--lv-c); }
-  .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 18px; }
-  .fc-teams .fi { font-size: 1.4em; border-radius: 3px; }
-  .fc-teams .score-mid { font-size: 16px; padding: 2px 10px; }
+  .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 17px; }
+  .fc-teams .fi { font-size: 1.3em; border-radius: 3px; }
+  .fc-teams .score-mid { font-size: 15px; padding: 2px 9px; }
 
-  /* ── Layout ── */
-  main { max-width: 840px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-
-  /* ── Legend ── */
-  .legend      { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.5rem; font-size: 12px; color: var(--muted); align-items: center; }
+  /* ── Légende ── */
+  .legend      { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 12px; color: var(--muted); align-items: center; }
   .legend-item { display: flex; align-items: center; gap: 5px; }
   .legend-dot  { width: 8px; height: 8px; border-radius: 50%; }
 
   /* ── Day groups ── */
-  .day-group { margin-bottom: 1.75rem; }
+  .day-group { margin-bottom: 1.5rem; }
   .day-label {
     font-size: 11px;
     letter-spacing: .08em;
     text-transform: uppercase;
     color: var(--muted);
-    padding-bottom: 8px;
+    padding-bottom: 7px;
     border-bottom: 1px solid var(--bd);
-    margin-bottom: 8px;
+    margin-bottom: 7px;
     font-weight: 600;
   }
   .phase-title {
@@ -121,10 +177,10 @@
   /* ── Match rows ── */
   .row {
     display: grid;
-    grid-template-columns: 58px 1fr auto;
+    grid-template-columns: 52px 1fr auto;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
+    gap: 10px;
+    padding: 9px 12px;
     border-radius: var(--r);
     margin-bottom: 4px;
     border: 1px solid var(--bd);
@@ -133,7 +189,7 @@
   }
   .row:hover    { border-color: var(--bd2); background: var(--surf2); }
   .row.fr       { border-color: var(--fr-bd); background: var(--fr-bg); }
-  .row.fr:hover { background: #1e4080; }
+  .row.fr:hover { background: rgba(0,35,149,0.28); }
   .row.nx       { border-color: var(--nx-bd); background: var(--nx-bg); }
   .row.lv       { border-color: var(--lv-bd); background: var(--lv-bg); }
   .row.fn       { border-color: var(--gold);  background: rgba(240,192,64,0.05); }
@@ -150,7 +206,6 @@
   .group       { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .venue       { font-size: 11px; color: var(--muted); font-style: italic; opacity: .7; }
 
-  /* Flag icons — sizing uniquement dans les lignes de match */
   .teams .fi { font-size: 1.1em; vertical-align: -0.1em; border-radius: 2px; }
 
   /* Channel badges */
@@ -160,86 +215,114 @@
 
   .score-mid { font-size: 13px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.09); padding: 1px 7px; border-radius: 4px; }
 
-  /* ── Standings ── */
-  #stoggle {
-    width: 100%; text-align: left;
-    padding: 9px 14px; margin-bottom: 1rem;
-    background: var(--surface); border: 1px solid var(--bd2); border-radius: var(--r);
-    color: var(--muted); font-size: 13px; font-family: inherit; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    transition: border-color .15s, color .15s;
+  /* ── Classements ── */
+  .standings-label {
+    font-size: 10px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-left: 2px;
   }
-  #stoggle:hover { border-color: var(--accent); color: var(--text); }
-  #stoggle .sarrow { display: inline-block; transition: transform .2s; font-style: normal; }
-  #stoggle.open .sarrow { transform: rotate(90deg); }
 
-  #standings { display: none; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
-  #standings.open { display: grid; }
+  #standings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 
-  .gtable { background: var(--surface); border: 1px solid var(--bd); border-radius: var(--r); overflow: hidden; }
+  .gtable { background: var(--bg); border: 1px solid var(--bd); border-radius: var(--r); overflow: hidden; }
   .gtable-head {
-    background: var(--surf2); padding: 6px 10px;
-    font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    padding: 5px 8px;
+    font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
     color: var(--accent); border-bottom: 1px solid var(--bd);
+    background: rgba(74,222,128,0.06);
   }
-  .gtable table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .gtable th { color: var(--muted); font-weight: 600; padding: 4px 5px; text-align: right; font-size: 11px; }
-  .gtable th:first-child { text-align: left; padding-left: 8px; }
-  .gtable td { padding: 5px 5px; text-align: right; border-top: 1px solid var(--bd); }
-  .gtable td:first-child { text-align: left; padding-left: 8px; }
-  .gtable tr.st-q1   { background: rgba(240,192,64,0.13); }
-  .gtable tr.st-q3ok { background: rgba(205,120,50,0.13); }
+  .gtable table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  .gtable th { color: var(--muted); font-weight: 600; padding: 3px 4px; text-align: right; font-size: 10px; }
+  .gtable th:first-child { text-align: left; padding-left: 7px; width: 43%; }
+  .gtable td { padding: 4px 4px; text-align: right; border-top: 1px solid var(--bd); }
+  .gtable td:first-child { text-align: left; padding-left: 7px; overflow: hidden; }
+  /* Top 2 qualifiés automatiquement */
+  .gtable tr.st-q1   { background: rgba(251,191,36,0.13); }
+  /* 3e qualifié parmi les meilleurs 3es */
+  .gtable tr.st-q3ok { background: rgba(205,120,50,0.10); }
   .gt-q-dot3 { width: 5px; height: 5px; border-radius: 50%; background: #cd7832; flex-shrink: 0; opacity: .8; }
+  /* Ligne France */
   .gtable tr.st-fr { background: var(--fr-bg); }
-  .gt-team { display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .gt-team .fi { font-size: 1em; border-radius: 2px; flex-shrink: 0; }
+  .gt-team { display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .gt-team .gt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .gt-team .fi { font-size: .9em; border-radius: 2px; flex-shrink: 0; }
   .gt-pts { font-weight: 700; color: var(--text); }
   .gt-gd-pos { color: #4ade80; }
   .gt-gd-neg { color: var(--lv-c); }
   .gt-q-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex-shrink: 0; opacity: .8; }
 
   .empty  { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
-  footer  { text-align: center; padding: 1.5rem; font-size: 12px; color: var(--muted); border-top: 1px solid var(--bd); }
 
-  @media (max-width: 500px) {
-    .row   { grid-template-columns: 46px 1fr auto; gap: 8px; padding: 9px 10px; }
+  footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--bd);
+  }
+
+  /* ── Mobile : retour 1 colonne ── */
+  @media (max-width: 680px) {
+    html, body { height: auto; overflow: auto; }
+    .app { display: block; height: auto; overflow: visible; }
+    .sidebar { overflow: visible; max-height: none; border-right: none; border-bottom: 1px solid var(--bd); }
+    .sidebar-body { overflow: visible; max-height: none; }
+    .main-col { overflow: visible; }
+    .matches-body { overflow: visible; }
+    #standings { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .row { grid-template-columns: 46px 1fr auto; gap: 8px; padding: 9px 10px; }
     .teams { font-size: 13px; }
-    #standings { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
 
-<header>
-  <p class="eyebrow">FIFA World Cup</p>
-  <h1>Coupe du Monde 2026</h1>
-  <p class="sub">11 juin — 19 juillet &middot; États-Unis, Canada, Mexique</p>
-</header>
+<div class="app">
 
-<div id="fcard-wrap">
-  <span id="stime-wrap"></span>
-  <div id="fcard" onclick="jumpToActive()" role="button" tabindex="0"></div>
-</div>
+  <!-- ── Header général (pleine largeur) ── -->
+  <header class="app-header">
+    <p class="eyebrow">FIFA World Cup</p>
+    <h1>Coupe du Monde 2026</h1>
+    <div id="fcard-wrap">
+      <div class="fcard-meta">
+        <div id="fcard-date"></div>
+        <span id="stime-wrap"></span>
+      </div>
+      <div id="fcard" onclick="jumpToActive()" role="button" tabindex="0"></div>
+    </div>
+  </header>
 
-<main>
-  <button id="stoggle"><i class="sarrow">▶</i> Classements des groupes</button>
-  <div id="standings"></div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Prochain match</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
-    <div class="legend-item"><span class="badge badge-m6">M6</span>En clair</div>
+  <!-- ── Colonne gauche : classements ── -->
+  <div class="sidebar">
+    <div class="sidebar-body">
+      <p class="standings-label">Classements des groupes</p>
+      <div id="standings"></div>
+    </div>
   </div>
-  <div id="cal"></div>
-</main>
 
-<footer>Horaires en heure française &middot; Scores ESPN</footer>
+  <!-- ── Colonne droite : matches ── -->
+  <div class="main-col">
+    <div class="matches-body">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Prochain match</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
+        <div class="legend-item"><span class="badge badge-m6">M6</span>En clair</div>
+      </div>
+      <div id="cal"></div>
+    </div>
+    <footer>Horaires en heure française &middot; Scores ESPN</footer>
+  </div>
+
+</div>
 
 <script>
 // ── Données ────────────────────────────────────────────────────────────────
-// utc = coup d'envoi UTC · t = heure FR · m = équipes · g = groupe/phase
-// tv = "m6" (affiché en clair) · ph:"ko" sur phases finales uniquement
-// fr:1 = match France · frIf:['1I',...] = match France conditionnel (mis à jour dynamiquement) · final:1 = finale
 const MATCHES = [
   {utc:"2026-06-11T19:00Z",t:"21:00",  m:"Mexique - Afrique du Sud",          g:"Groupe A",       tv:"m6",  v:"Mexico City - Estadio Azteca"},
   {utc:"2026-06-12T02:00Z",t:"04:00",   m:"Corée du Sud - Rép. tchèque",       g:"Groupe A",               v:"Guadalajara - Estadio Akron"},
@@ -313,7 +396,7 @@ const MATCHES = [
   {utc:"2026-06-27T23:30Z",t:"01:30", m:"RD Congo - Ouzbékistan",            g:"Groupe K",               v:"Atlanta - Mercedes-Benz Stadium"},
   {utc:"2026-06-28T02:00Z",t:"04:00",   m:"Algérie - Autriche",                g:"Groupe J",               v:"Kansas City - Arrowhead Stadium"},
   {utc:"2026-06-28T02:00Z",t:"04:00",   m:"Jordanie - Argentine",              g:"Groupe J",               v:"Dallas - AT&T Stadium"},
-  // Phases finales — noms à confirmer selon le tableau
+  // Phases finales
   {utc:"2026-06-28T19:00Z",t:"21:00",  m:"16e #1",            g:"16e de finale", ph:"ko", v:"Kansas City - Arrowhead Stadium"},
   {utc:"2026-06-28T22:00Z",t:"00:00",   m:"16e #2",            g:"16e de finale", ph:"ko", v:"Los Angeles - SoFi Stadium"},
   {utc:"2026-06-29T20:30Z",t:"22:30",m:"16e #3",            g:"16e de finale", ph:"ko", v:"Dallas - AT&T Stadium"},
@@ -345,9 +428,7 @@ const MATCHES = [
   {utc:"2026-07-19T19:00Z",t:"21:00",  m:"Finale",            g:"Finale",         tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       final:1},
 ];
 
-// ── Drapeaux ────────────────────────────────────────────────────────────────
-// Codes ISO 3166-1 alpha-2 pour flag-icons (lipis) via jsDelivr
-// gb-eng et gb-sct sont des codes de subdivision supportés par flag-icons
+// ── Drapeaux ───────────────────────────────────────────────────────────────
 const FLAG = {
   'Afrique du Sud':'za',    'Algérie':'dz',           'Allemagne':'de',
   'Angleterre':'gb-eng',    'Arabie saoudite':'sa',    'Argentine':'ar',
@@ -370,34 +451,16 @@ const FLAG = {
 function teamHtml(name) {
   const code = FLAG[name];
   const flag = code ? `<span class="fi fi-${code}"></span>` : '';
-  return `${flag}${name}`;
+  return `${flag}<span class="gt-name">${name}</span>`;
 }
 
-// "Équipe A - Équipe B" → HTML avec drapeaux et séparateur stylé
-// Ne splitte que sur " - " (espace-tiret-espace) pour éviter les faux positifs
-// sur les noms composés (RD Congo, Cap-Vert…)
 function matchHtml(str, score) {
   const [a, b] = str.split(' - ');
-  if (!b) return str; // placeholder KO sans séparateur
+  if (!b) return str;
   const sep = score
     ? `<span class="sep score-mid">${score}</span>`
     : `<span class="sep">-</span>`;
   return `${teamHtml(a)} ${sep} ${teamHtml(b)}`;
-}
-
-// Affiche "EquipeA [score] EquipeB" si score dispo, sinon "EquipeA - EquipeB"
-function teamsHtml(x, st) {
-  const parts = x.m.split(' - ');
-  if (parts.length < 2) return `<span>${x.m}</span>`;
-  const [a, b] = parts;
-  const s = scoreMap[utcKey(x.utc)];
-  const isLive = st === 'live' || st === 'ht';
-  const isFT   = st === 'ft';
-  if (s && s.hs !== null && (isLive || isFT)) {
-    const cls = isFT ? 'score-ft' : 'score-lv';
-    return `${teamHtml(a)} <span class="${cls}">${s.hs}–${s.as}</span> ${teamHtml(b)}`;
-  }
-  return `${teamHtml(a)} <span class="sep">-</span> ${teamHtml(b)}`;
 }
 
 // ── Constantes ─────────────────────────────────────────────────────────────
@@ -409,8 +472,8 @@ const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
 const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── State ──────────────────────────────────────────────────────────────────
-let scoreMap     = {}; // utcKey → { hs, as, st:'live'|'ht'|'ft'|'sched', min }
-let scoreMapArr  = {}; // utcKey → ordered array (handles simultaneous matches)
+let scoreMap    = {};
+let scoreMapArr = {};
 
 // ── ESPN ───────────────────────────────────────────────────────────────────
 function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
@@ -443,7 +506,6 @@ async function fetchScores() {
       newArr[key].push(entry);
     });
     scoreMapArr = newArr;
-    // Mettre à jour les noms d'équipes KO dès qu'ESPN les connaît
     MATCHES.forEach(m => {
       if (m.ph !== 'ko') return;
       const s = scoreMap[utcKey(m.utc)];
@@ -493,14 +555,11 @@ function computeStandings() {
 
 function renderStandings() {
   const container = document.getElementById('standings');
-  if (!container.classList.contains('open')) return;
   const groups = computeStandings();
-  // Preserve group order from MATCHES
   const seen = new Set();
   const groupOrder = [];
   MATCHES.forEach(m => { if (!m.ph && !seen.has(m.g)) { seen.add(m.g); groupOrder.push(m.g); } });
   let html = '';
-  // Collect all 3rd-place teams to determine best 8
   const sortFn = (a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name);
   const rowsByGroup = {};
   groupOrder.forEach(gname => {
@@ -549,11 +608,9 @@ function renderStandings() {
 }
 
 // ── Logique temporelle ─────────────────────────────────────────────────────
-// Priorité : données ESPN si disponibles, sinon détection locale par horloge
 function matchState(m) {
   const s = scoreMap[utcKey(m.utc)];
-  if (s && s.st !== 'sched') return s.st; // ESPN autoritatif pour live/ht/ft
-  // Fallback local — si ESPN dit 'sched' ou n'a pas encore de données
+  if (s && s.st !== 'sched') return s.st;
   const now     = Date.now();
   const ko      = new Date(m.utc).getTime();
   const dur     = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
@@ -569,7 +626,6 @@ function liveLabel(m) {
     if (s.st === 'ht') return 'Mi-temps';
     if (s.min) return s.min;
   }
-  // Fallback : mi-temps locale (halftime ≈ 45+stoppage to ~70min from KO)
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 45 && elapsed <= 70) return 'Mi-temps';
   return elapsed < 45 ? '1ère mi-temps' : '2ème mi-temps';
@@ -630,7 +686,6 @@ function render() {
     const day   = dayLabel(x.utc);
     const phase = x.ph === 'ko' ? (KO_PHASES.find(p => x.g.startsWith(p)) || x.g) : '';
 
-    // Fermer le day-group précédent si changement de jour OU entrée en phase KO
     if (day !== lastDay || (phase && phase !== lastPhase)) {
       if (lastDay) html += '</div>';
       if (phase && phase !== lastPhase) {
@@ -661,20 +716,26 @@ function render() {
 
 // ── Focus card ─────────────────────────────────────────────────────────────
 function updateStatusBar(next) {
-  const hm    = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const card  = document.getElementById('fcard');
-  const live  = MATCHES.filter(x => matchState(x) === 'live' || matchState(x) === 'ht');
-  const focus = live[0] || MATCHES.find(x => x.utc === next);
+  const hm     = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const card   = document.getElementById('fcard');
+  const dateEl = document.getElementById('fcard-date');
+  const live   = MATCHES.filter(x => matchState(x) === 'live' || matchState(x) === 'ht');
+  const focus  = live[0] || MATCHES.find(x => x.utc === next);
 
   document.getElementById('stime-wrap').textContent = hm;
 
   if (!focus) {
     card.style.display = 'none';
+    dateEl.style.display = 'none';
     return;
   }
 
+  dateEl.textContent = new Date(focus.utc).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris'
+  });
+  dateEl.style.display = 'block';
+
   const isLive  = live.length > 0;
-  const focusSt = matchState(focus);
   const s       = scoreMap[utcKey(focus.utc)];
 
   let statusHtml, timerHtml, fcScore = '';
@@ -702,21 +763,24 @@ function updateStatusBar(next) {
 // ── Jump vers le match actif ───────────────────────────────────────────────
 function jumpToActive() {
   const next   = nextMatchUtc();
-  const target = MATCHES.find(x => { const s = matchState(x); return s === 'live' || s === 'ht'; }) || MATCHES.find(x => x.utc === next);
+  const target = MATCHES.find(x => { const s = matchState(x); return s === 'live' || s === 'ht'; })
+               || MATCHES.find(x => x.utc === next);
   if (!target) return;
 
-  if (!document.querySelector(`[data-utc="${target.utc}"]`)) {
-    render();
-  }
+  if (!document.querySelector(`[data-utc="${target.utc}"]`)) render();
 
   setTimeout(() => {
-    const el = document.querySelector(`[data-utc="${target.utc}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const el  = document.querySelector(`[data-utc="${target.utc}"]`);
+    const col = document.querySelector('.matches-body');
+    if (el && col) {
+      const elTop  = el.getBoundingClientRect().top;
+      const colTop = col.getBoundingClientRect().top;
+      col.scrollTop += elTop - colTop - col.clientHeight / 2 + el.clientHeight / 2;
+    }
   }, 50);
 }
 
-// ── Position France en phase de groupes ────────────────────────────────────
-// Retourne ex. '1I', '2I', '3I', ou null si groupe pas terminé
+// ── Position France en phase de groupes ───────────────────────────────────
 function computeFrancePos() {
   const groups = computeStandings();
   const g = groups['Groupe I'];
@@ -730,7 +794,6 @@ function computeFrancePos() {
   return idx >= 0 ? `${idx+1}I` : null;
 }
 
-// Met à jour le flag fr sur les matchs KO selon la position réelle de la France
 function updateFranceKoFlags() {
   const pos = computeFrancePos();
   MATCHES.forEach(m => {
@@ -745,19 +808,13 @@ async function refresh() {
   updateFranceKoFlags();
   render();
   renderStandings();
-  // Refresh plus fréquent si match(s) en cours
   const hasLive = MATCHES.some(x => { const s = scoreMap[utcKey(x.utc)]; return s && (s.st === 'live' || s.st === 'ht'); });
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
 
-document.getElementById('stoggle').addEventListener('click', () => {
-  document.getElementById('stoggle').classList.toggle('open');
-  document.getElementById('standings').classList.toggle('open');
-  renderStandings();
-});
-
-render(); // Affichage immédiat avec détection locale
-refresh();            // Puis fetch ESPN + refresh planifié
+render();
+renderStandings();
+refresh();
 </script>
 </body>
 </html>
