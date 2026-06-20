@@ -24,7 +24,7 @@
     --gold:    #fbbf24;
     --m6-bg:   rgba(74,222,128,0.12);
     --m6-tx:   #86efac;
-    --r:       8px;
+    --r:       6px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,8 +35,8 @@
     background: var(--bg);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.4;
   }
 
   .page {
@@ -53,7 +53,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.6rem 1.5rem;
     border-bottom: 1px solid var(--bd);
     background: linear-gradient(180deg, #091410 0%, var(--surface) 100%);
   }
@@ -67,7 +67,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border: 1px solid var(--bd2);
     border-radius: 20px;
     transition: color .15s, border-color .15s;
@@ -77,7 +77,7 @@
 
   .header-title { display: flex; flex-direction: column; }
   .eyebrow { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-  h1 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+  h1 { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
 
   #stime { font-size: 13px; color: var(--muted); flex-shrink: 0; }
 
@@ -87,35 +87,34 @@
     display: flex;
     align-items: center;
     gap: 1.2rem;
-    padding: 7px 1.5rem;
+    padding: 6px 1.5rem;
     border-bottom: 1px solid var(--bd);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
   }
   .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
   /* ── Bracket scroll container ── */
   .bracket-outer {
     flex: 1;
-    overflow: auto;
-    padding: 24px 32px 48px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--bd2) transparent;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 14px 12px 12px;
   }
-  .bracket-outer::-webkit-scrollbar { width: 4px; height: 4px; }
-  .bracket-outer::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
 
   /* ── Bracket ── */
   .bracket {
     display: flex;
     align-items: flex-start;
     gap: 0;
-    min-width: max-content;
     position: relative;
+    transform-origin: top center;
   }
 
-  /* SVG connector overlay — sized by JS */
+  /* SVG connector overlay */
   #connectors {
     position: absolute;
     top: 0; left: 0;
@@ -132,13 +131,12 @@
   }
 
   .round-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
     color: var(--accent);
-    margin-bottom: 12px;
-    padding-left: 2px;
+    margin-bottom: 10px;
     white-space: nowrap;
     text-align: center;
   }
@@ -150,15 +148,14 @@
     position: relative;
   }
 
-  /* Spacer between rounds (for connector lines) */
   .connector-gap {
-    width: 40px;
+    width: 22px;
     flex-shrink: 0;
   }
 
   /* ── Match card ── */
   .bm {
-    width: 186px;
+    width: 150px;
     border: 1px solid var(--bd2);
     border-radius: var(--r);
     background: var(--surface);
@@ -176,26 +173,26 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 5px 8px 4px;
+    padding: 4px 7px 3px;
     border-bottom: 1px solid var(--bd);
   }
-  .bm-date  { font-size: 10px; color: var(--muted); white-space: nowrap; }
-  .bm-status-live { font-size: 10px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
-  .bm-status-ft   { font-size: 10px; color: var(--muted); letter-spacing: .02em; }
-  .bm-badge-m6 { font-size: 9px; padding: 1px 5px; border-radius: 20px; font-weight: 600;
-                  background: var(--m6-bg); color: var(--m6-tx); }
+  .bm-date         { font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+  .bm-status-live  { font-size: 9.5px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
+  .bm-status-ft    { font-size: 9.5px; color: var(--muted); letter-spacing: .02em; }
+  .bm-badge-m6     { font-size: 8px; padding: 1px 4px; border-radius: 20px; font-weight: 600;
+                     background: var(--m6-bg); color: var(--m6-tx); }
 
-  .bm-teams { padding: 5px 8px 6px; display: flex; flex-direction: column; gap: 4px; }
+  .bm-teams { padding: 4px 7px 5px; display: flex; flex-direction: column; gap: 3px; }
 
   .bm-team {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
-  .bm-team .fi  { font-size: 1em; border-radius: 2px; flex-shrink: 0; }
+  .bm-team .fi  { font-size: .9em; border-radius: 2px; flex-shrink: 0; }
   .bm-tname {
     flex: 1;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -204,47 +201,38 @@
   }
   .bm-tname.ko   { color: var(--muted); font-style: italic; font-weight: 400; }
   .bm-tscore {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--muted);
-    min-width: 14px;
+    min-width: 12px;
     text-align: right;
     flex-shrink: 0;
   }
   .bm-tscore.win { color: var(--text); }
   .bm-tscore.lv  { color: var(--lv-c); }
 
-  /* France row highlight inside bracket card */
   .bm.fr .bm-tname { color: #c8d8ff; }
 
-  /* ── Spacing between cards per round ── */
-  /* Gaps are set inline by JS based on round size */
-
+  /* Petite finale sous la finale dans la colonne centrale */
   .third-place-sep {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
     color: var(--muted);
-    margin-top: 24px;
+    margin-top: 20px;
     margin-bottom: 8px;
-    padding-left: 2px;
-    white-space: nowrap;
     text-align: center;
+    white-space: nowrap;
   }
 
   footer {
     flex-shrink: 0;
     text-align: center;
-    padding: 8px;
+    padding: 7px;
     font-size: 11px;
     color: var(--muted);
     border-top: 1px solid var(--bd);
-  }
-
-  @media (max-width: 500px) {
-    .app-header { padding: 0.6rem 1rem; }
-    .bracket-outer { padding: 16px 12px 32px; }
   }
 </style>
 </head>
@@ -268,43 +256,60 @@
     <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Finale</div>
   </div>
 
-  <div class="bracket-outer">
+  <div class="bracket-outer" id="bracket-outer">
     <div class="bracket" id="bracket">
       <svg id="connectors"></svg>
 
-      <div class="round" id="col-r32">
+      <!-- Côté gauche -->
+      <div class="round" id="col-r32l">
         <div class="round-label">16es de finale</div>
-        <div class="round-matches" id="r32"></div>
+        <div class="round-matches" id="r32l"></div>
       </div>
-
       <div class="connector-gap"></div>
-
-      <div class="round" id="col-r16">
+      <div class="round" id="col-r16l">
         <div class="round-label">8es de finale</div>
-        <div class="round-matches" id="r16"></div>
+        <div class="round-matches" id="r16l"></div>
       </div>
-
+      <div class="connector-gap"></div>
+      <div class="round" id="col-qfl">
+        <div class="round-label">Quarts</div>
+        <div class="round-matches" id="qfl"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-sfl">
+        <div class="round-label">Demis</div>
+        <div class="round-matches" id="sfl"></div>
+      </div>
       <div class="connector-gap"></div>
 
-      <div class="round" id="col-qf">
-        <div class="round-label">Quarts de finale</div>
-        <div class="round-matches" id="qf"></div>
-      </div>
-
-      <div class="connector-gap"></div>
-
-      <div class="round" id="col-sf">
-        <div class="round-label">Demi-finales</div>
-        <div class="round-matches" id="sf"></div>
-      </div>
-
-      <div class="connector-gap"></div>
-
-      <div class="round" id="col-f">
+      <!-- Centre -->
+      <div class="round" id="col-rf">
         <div class="round-label">Finale</div>
         <div class="round-matches" id="rf"></div>
-        <div class="third-place-sep">Petite finale</div>
+        <div class="third-place-sep">3e place</div>
         <div class="round-matches" id="third-place"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+      <!-- Côté droit (miroir) -->
+      <div class="round" id="col-sfr">
+        <div class="round-label">Demis</div>
+        <div class="round-matches" id="sfr"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-qfr">
+        <div class="round-label">Quarts</div>
+        <div class="round-matches" id="qfr"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-r16r">
+        <div class="round-label">8es de finale</div>
+        <div class="round-matches" id="r16r"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-r32r">
+        <div class="round-label">16es de finale</div>
+        <div class="round-matches" id="r32r"></div>
       </div>
     </div>
   </div>
@@ -382,6 +387,9 @@ const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.worl
 
 // ── State ─────────────────────────────────────────────────────────────────
 let scoreMap = {};
+let currentScale = 1;
+let CARD_H   = 66;
+let PAIR_GAP = 6;
 
 function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
 
@@ -410,7 +418,6 @@ async function fetchScores() {
         aname: away?.team?.shortDisplayName,
       };
     });
-    // Mettre à jour les noms d'équipes KO dès qu'ESPN les connaît
     MATCHES_KO.forEach(m => {
       const s = scoreMap[utcKey(m.utc)];
       if (!s || !s.hname || !s.aname) return;
@@ -444,12 +451,10 @@ function cardHtml(m) {
   const isLv = st === 'live' || st === 'ht';
   const isFT = st === 'ft';
 
-  // Décomposer le nom du match
-  const parts = m.m.split(' - ');
+  const parts    = m.m.split(' - ');
   const hasTeams = parts.length === 2;
   const [ta, tb] = hasTeams ? parts : [m.m, null];
 
-  // Scores
   let hs = null, as_ = null;
   if (s && s.hs !== null && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
 
@@ -459,26 +464,26 @@ function cardHtml(m) {
     return `<span class="bm-tscore ${cls}">${score}</span>`;
   };
 
-  // Status badge
-  let statusHtml = `<span class="bm-date">${m.t} · ${dayLabel(m.utc).slice(0,6)}</span>`;
+  // Date avant l'heure
+  let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${m.t}</span>`;
   let badgeHtml  = '';
   if (isLv) {
     const min = s?.min || (st === 'ht' ? 'MT' : '');
     statusHtml = `<span class="bm-status-live">⬤ ${min || 'LIVE'}</span>`;
   } else if (isFT) {
-    statusHtml = `<span class="bm-date">${m.t} · ${dayLabel(m.utc).slice(0,6)}</span>`;
-    badgeHtml  = `<span class="bm-status-ft">FT</span>`;
+    badgeHtml = `<span class="bm-status-ft">FT</span>`;
   }
   if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
 
-  // Team rows
   function teamRow(name, score, other) {
     if (!name) return '';
-    const code = FLAG[name];
-    const flag = code ? `<span class="fi fi-${code}"></span>` : '';
+    const code  = FLAG[name];
+    const flag  = code ? `<span class="fi fi-${code}"></span>` : '';
     const isTbd = !hasTeams || parts.length < 2;
-    const tname = isTbd ? `<span class="bm-tname ko">${name}</span>` : `<span class="bm-tname">${name}</span>`;
-    const sc    = score !== null ? scoreWin(score, other) : '';
+    const tname = isTbd
+      ? `<span class="bm-tname ko">${name}</span>`
+      : `<span class="bm-tname">${name}</span>`;
+    const sc = score !== null ? scoreWin(score, other) : '';
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
@@ -493,117 +498,136 @@ function cardHtml(m) {
   </div>`;
 }
 
-// ── Calcul du gap entre cartes pour centrage par round ────────────────────
-const CARD_H   = 82; // hauteur approximative d'une bm card
-const PAIR_GAP = 8;  // gap entre les 2 cartes d'une paire dans R32
-
-// Distance entre centres consécutifs dans un round : double à chaque round
-function step(roundIdx) {
-  return Math.pow(2, roundIdx) * (CARD_H + PAIR_GAP);
+// ── Calcul des positions ──────────────────────────────────────────────────
+// Chaque round double la distance entre centres consécutifs
+function step(idx)        { return Math.pow(2, idx) * (CARD_H + PAIR_GAP); }
+function roundGap(idx)    { return step(idx) - CARD_H; }
+function firstCenter(idx) {
+  if (idx === 0) return CARD_H / 2;
+  return firstCenter(idx - 1) + step(idx - 1) / 2;
 }
-
-// Gap CSS entre cartes d'un round
-function roundGap(roundIdx) {
-  return step(roundIdx) - CARD_H;
-}
-
-// Y du centre de la 1ère carte d'un round
-function firstCenter(roundIdx) {
-  if (roundIdx === 0) return CARD_H / 2;
-  return firstCenter(roundIdx - 1) + step(roundIdx - 1) / 2;
-}
-
-// paddingTop pour que la 1ère carte soit centrée sur son slot
-function topOffset(roundIdx) {
-  return firstCenter(roundIdx) - CARD_H / 2;
-}
+function topOffset(idx)   { return firstCenter(idx) - CARD_H / 2; }
 
 // ── Rendu du bracket ──────────────────────────────────────────────────────
 function render() {
   const byRound = { r32: [], r16: [], qf: [], sf: [], third: [], final: [] };
   MATCHES_KO.forEach(m => { if (byRound[m.g]) byRound[m.g].push(m); });
 
-  const rounds = [
-    { id: 'r32', matches: byRound.r32,   idx: 0 },
-    { id: 'r16', matches: byRound.r16,   idx: 1 },
-    { id: 'qf',  matches: byRound.qf,    idx: 2 },
-    { id: 'sf',  matches: byRound.sf,    idx: 3 },
-    { id: 'rf',  matches: byRound.final, idx: 4 },
+  // Côté gauche : matchs 0..N/2, côté droit : N/2..N
+  const cols = [
+    { id: 'r32l', matches: byRound.r32.slice(0, 8),  idx: 0 },
+    { id: 'r16l', matches: byRound.r16.slice(0, 4),  idx: 1 },
+    { id: 'qfl',  matches: byRound.qf.slice(0, 2),   idx: 2 },
+    { id: 'sfl',  matches: byRound.sf.slice(0, 1),   idx: 3 },
+    { id: 'rf',   matches: byRound.final,             idx: 3 }, // aligné avec les demis
+    { id: 'sfr',  matches: byRound.sf.slice(1, 2),   idx: 3 },
+    { id: 'qfr',  matches: byRound.qf.slice(2, 4),   idx: 2 },
+    { id: 'r16r', matches: byRound.r16.slice(4, 8),  idx: 1 },
+    { id: 'r32r', matches: byRound.r32.slice(8, 16), idx: 0 },
   ];
 
-  rounds.forEach(({ id, matches, idx }) => {
-    const col = document.getElementById(id);
-    col.style.gap        = roundGap(idx) + 'px';
-    col.style.paddingTop = topOffset(idx) + 'px';
-    col.innerHTML = matches.map(m => cardHtml(m)).join('');
+  // Premier passage : injecter le HTML sans gaps pour mesurer CARD_H
+  cols.forEach(({ id, matches }) => {
+    const el = document.getElementById(id);
+    el.style.gap = '0';
+    el.style.paddingTop = '0';
+    el.innerHTML = matches.map(m => cardHtml(m)).join('');
   });
+  document.getElementById('third-place').innerHTML =
+    byRound.third.map(m => cardHtml(m)).join('');
 
-  // Petite finale en standalone sous l'arbre principal
-  const thirdEl = document.getElementById('third-place');
-  if (thirdEl) thirdEl.innerHTML = byRound.third.map(m => cardHtml(m)).join('');
+  // Mesurer la hauteur réelle d'une carte
+  const sample = document.querySelector('#r32l .bm');
+  if (sample) CARD_H = sample.offsetHeight;
+
+  // Deuxième passage : appliquer les gaps corrects
+  cols.forEach(({ id, idx }) => {
+    const el = document.getElementById(id);
+    el.style.gap        = roundGap(idx) + 'px';
+    el.style.paddingTop = topOffset(idx) + 'px';
+  });
 
   document.getElementById('stime').textContent =
     new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-  // Délai pour que le DOM soit peint avant de tracer les connecteurs
-  requestAnimationFrame(drawConnectors);
+  requestAnimationFrame(() => {
+    autoScale();
+    requestAnimationFrame(drawConnectors);
+  });
 }
 
-// ── Connecteurs SVG entre rounds ──────────────────────────────────────────
-function drawConnectors() {
-  const svg = document.getElementById('connectors');
+// ── Auto-scale pour tenir dans la fenêtre ─────────────────────────────────
+function autoScale() {
   const bracket = document.getElementById('bracket');
-  const bracketRect = bracket.getBoundingClientRect();
+  const outer   = document.getElementById('bracket-outer');
+  bracket.style.transform = '';
+  currentScale = 1;
 
-  // Paires : r32→r16→qf→sf→final (ratio = nb de cartes source par carte destination)
-  const pairDefs = [
-    { fromId: 'r32', toId: 'r16', ratio: 2 },
-    { fromId: 'r16', toId: 'qf',  ratio: 2 },
-    { fromId: 'qf',  toId: 'sf',  ratio: 2 },
-    { fromId: 'sf',  toId: 'rf',  ratio: 2 },
-  ];
+  const availW = outer.clientWidth  - 24;
+  const availH = outer.clientHeight - 20;
+  const bW     = bracket.scrollWidth;
+  const bH     = bracket.scrollHeight;
 
-  let paths = '';
+  currentScale = Math.min(availW / bW, availH / bH, 1);
+  bracket.style.transform = `scale(${currentScale})`;
+}
 
-  pairDefs.forEach(({ fromId, toId, ratio }) => {
+// ── Connecteurs SVG ────────────────────────────────────────────────────────
+function drawConnectors() {
+  const bracket = document.getElementById('bracket');
+  const bRect   = bracket.getBoundingClientRect();
+  const s       = currentScale;
+  const svg     = document.getElementById('connectors');
+
+  svg.setAttribute('width',  bracket.scrollWidth);
+  svg.setAttribute('height', bracket.scrollHeight);
+
+  const lines = [];
+
+  function addPairs(fromId, toId, ratio, dir) {
     const fromCards = [...document.getElementById(fromId).querySelectorAll('.bm')];
     const toCards   = [...document.getElementById(toId).querySelectorAll('.bm')];
     if (!fromCards.length || !toCards.length) return;
 
     toCards.forEach((toCard, ti) => {
-      const toRect = toCard.getBoundingClientRect();
-      const toMidY = toRect.top + toRect.height / 2 - bracketRect.top;
-      const toX    = toRect.left - bracketRect.left;
+      const tr    = toCard.getBoundingClientRect();
+      const toMidY = (tr.top + tr.height / 2 - bRect.top) / s;
+      const toX    = dir === 'ltr'
+        ? (tr.left  - bRect.left) / s
+        : (tr.right - bRect.left) / s;
 
       const pairs = fromCards.slice(ti * ratio, ti * ratio + ratio);
       if (!pairs.length) return;
 
-      const fromRects = pairs.map(c => c.getBoundingClientRect());
-      const fromX = fromRects[0].right - bracketRect.left;
-      const topY  = fromRects[0].top  + fromRects[0].height / 2 - bracketRect.top;
-      const botY  = fromRects[fromRects.length - 1].top + fromRects[fromRects.length - 1].height / 2 - bracketRect.top;
-      const midX  = fromX + (toX - fromX) / 2;
+      const frs   = pairs.map(c => c.getBoundingClientRect());
+      const fromX = dir === 'ltr'
+        ? (frs[0].right - bRect.left) / s
+        : (frs[0].left  - bRect.left) / s;
+      const topY  = (frs[0].top + frs[0].height / 2 - bRect.top) / s;
+      const botY  = (frs[frs.length - 1].top + frs[frs.length - 1].height / 2 - bRect.top) / s;
+      const midX  = (fromX + toX) / 2;
 
-      // Ligne horizontale depuis chaque carte source
-      fromRects.forEach(fr => {
-        const y = fr.top + fr.height / 2 - bracketRect.top;
-        paths += `<line x1="${fromX}" y1="${y}" x2="${midX}" y2="${y}" />`;
+      frs.forEach(fr => {
+        const y = (fr.top + fr.height / 2 - bRect.top) / s;
+        lines.push(`<line x1="${fromX}" y1="${y}" x2="${midX}" y2="${y}"/>`);
       });
-      // Ligne verticale reliant les sources
-      if (fromRects.length > 1) {
-        paths += `<line x1="${midX}" y1="${topY}" x2="${midX}" y2="${botY}" />`;
-      }
-      // Ligne horizontale vers la carte destination
-      paths += `<line x1="${midX}" y1="${toMidY}" x2="${toX}" y2="${toMidY}" />`;
+      if (frs.length > 1)
+        lines.push(`<line x1="${midX}" y1="${topY}" x2="${midX}" y2="${botY}"/>`);
+      lines.push(`<line x1="${midX}" y1="${toMidY}" x2="${toX}" y2="${toMidY}"/>`);
     });
-  });
+  }
 
-  svg.innerHTML = `<g stroke="rgba(255,255,255,0.10)" stroke-width="1" fill="none">${paths}</g>`;
+  addPairs('r32l', 'r16l', 2, 'ltr');
+  addPairs('r16l', 'qfl',  2, 'ltr');
+  addPairs('qfl',  'sfl',  2, 'ltr');
+  addPairs('sfl',  'rf',   1, 'ltr');
 
-  // Taille du SVG = taille du bracket
-  const bRect = bracket.getBoundingClientRect();
-  svg.setAttribute('width',  bRect.width);
-  svg.setAttribute('height', bRect.height);
+  addPairs('r32r', 'r16r', 2, 'rtl');
+  addPairs('r16r', 'qfr',  2, 'rtl');
+  addPairs('qfr',  'sfr',  2, 'rtl');
+  addPairs('sfr',  'rf',   1, 'rtl');
+
+  svg.innerHTML = `<g stroke="rgba(255,255,255,0.13)" stroke-width="1.5" fill="none">${lines.join('')}</g>`;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
@@ -617,7 +641,10 @@ async function refresh() {
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
 
-window.addEventListener('resize', drawConnectors);
+window.addEventListener('resize', () => {
+  autoScale();
+  requestAnimationFrame(drawConnectors);
+});
 
 render();
 refresh();
