@@ -266,18 +266,19 @@
     border-top: 1px solid var(--bd);
   }
 
-  /* ── Mobile : retour 1 colonne ── */
-  @media (max-width: 680px) {
-    html, body { height: auto; overflow: auto; }
-    .app { display: block; height: auto; overflow: visible; }
-    .sidebar { overflow: visible; max-height: none; border-right: none; border-bottom: 1px solid var(--bd); }
-    .sidebar-body { overflow: visible; max-height: none; }
-    .main-col { overflow: visible; }
-    .matches-body { overflow: visible; }
-    #standings { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-    .row { grid-template-columns: 46px 1fr auto; gap: 8px; padding: 9px 10px; }
-    .teams { font-size: 13px; }
+  /* ── Lien tableau de bord ── */
+  .bracket-link {
+    display: flex; align-items: center; gap: 7px;
+    margin: 12px 10px 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    text-decoration: none;
+    background: var(--bg);
+    transition: border-color .15s, color .15s, background .15s;
   }
+  .bracket-link:hover { border-color: var(--accent); color: var(--accent); background: var(--surf2); }
 </style>
 </head>
 <body>
@@ -302,18 +303,7 @@
     <div class="sidebar-body">
       <p class="standings-label">Classements des groupes</p>
       <div id="standings"></div>
-      <a href="bracket.html" style="
-        display:flex; align-items:center; gap:7px;
-        margin:12px 10px 4px;
-        padding:8px 12px;
-        border:1px solid var(--bd2);
-        border-radius:var(--r);
-        font-size:12px; font-weight:600; color:var(--muted);
-        text-decoration:none;
-        background:var(--bg);
-        transition:border-color .15s, color .15s, background .15s;
-      " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)';this.style.background='var(--surf2)'"
-         onmouseout="this.style.borderColor='var(--bd2)';this.style.color='var(--muted)';this.style.background='var(--bg)'">
+      <a href="bracket.html" class="bracket-link">
         <span style="font-size:14px">🏆</span>
         <span>Tableau du tournoi</span>
         <span style="margin-left:auto;opacity:.5">→</span>
@@ -336,6 +326,7 @@
 
 </div>
 
+<script src="shared.js"></script>
 <script>
 // ── Données ────────────────────────────────────────────────────────────────
 const MATCHES = [
@@ -443,26 +434,6 @@ const MATCHES = [
   {utc:"2026-07-19T19:00Z",t:"21:00",  m:"Finale",            g:"Finale",         tv:"m6",   ph:"ko", v:"New York - MetLife Stadium",       final:1},
 ];
 
-// ── Drapeaux ───────────────────────────────────────────────────────────────
-const FLAG = {
-  'Afrique du Sud':'za',    'Algérie':'dz',           'Allemagne':'de',
-  'Angleterre':'gb-eng',    'Arabie saoudite':'sa',    'Argentine':'ar',
-  'Australie':'au',         'Autriche':'at',           'Belgique':'be',
-  'Bosnie-Herzégovine':'ba','Brésil':'br',             'Canada':'ca',
-  'Cap-Vert':'cv',          'Colombie':'co',           'Corée du Sud':'kr',
-  'Croatie':'hr',           'Curaçao':'cw',            "Côte d'Ivoire":'ci',
-  'Espagne':'es',           'France':'fr',             'Ghana':'gh',
-  'Haïti':'ht',             'Irak':'iq',               'Iran':'ir',
-  'Japon':'jp',             'Jordanie':'jo',           'Maroc':'ma',
-  'Mexique':'mx',           'Norvège':'no',            'Nouvelle-Zélande':'nz',
-  'Ouzbékistan':'uz',       'Panama':'pa',             'Paraguay':'py',
-  'Pays-Bas':'nl',          'Portugal':'pt',           'Qatar':'qa',
-  'RD Congo':'cd',          'Rép. tchèque':'cz',       'Suisse':'ch',
-  'Suède':'se',             'Sénégal':'sn',            'Tunisie':'tn',
-  'Turquie':'tr',           'Uruguay':'uy',            'Écosse':'gb-sct',
-  'Égypte':'eg',            'Équateur':'ec',           'États-Unis':'us',
-};
-
 function teamHtml(name) {
   const code = FLAG[name];
   const flag = code ? `<span class="fi fi-${code}"></span>` : '';
@@ -478,26 +449,19 @@ function matchHtml(str, score) {
   return `${teamHtml(a)} ${sep} ${teamHtml(b)}`;
 }
 
-// ── Constantes ─────────────────────────────────────────────────────────────
-const DUR_GROUP  = 115 * 60 * 1000;
-const DUR_KO     = 160 * 60 * 1000;
-const DAYS       = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-const MONTHS     = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+// ── Constantes locales ─────────────────────────────────────────────────────
 const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
-const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── State ──────────────────────────────────────────────────────────────────
-let scoreMap    = {};
-let scoreMapArr = {};
+let scoreMap        = {};
+let scoreMapArr     = {};
+let lastStandingsSig = '';
 
 // ── ESPN ───────────────────────────────────────────────────────────────────
-function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
-
 async function fetchScores() {
+  const data = await fetchEspnData();
+  if (!data) return false;
   try {
-    const r = await fetch(ESPN_URL);
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
     scoreMap = {};
     const newArr = {};
     (data.events || []).forEach(ev => {
@@ -533,9 +497,7 @@ async function fetchScores() {
       if (hn && an && FLAG[hn] && FLAG[an]) m.m = `${hn} - ${an}`;
     });
     return true;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 // ── Classements ────────────────────────────────────────────────────────────
@@ -569,6 +531,9 @@ function computeStandings() {
 }
 
 function renderStandings() {
+  const sig = JSON.stringify(scoreMap);
+  if (sig === lastStandingsSig) return;
+  lastStandingsSig = sig;
   const container = document.getElementById('standings');
   const groups = computeStandings();
   const seen = new Set();
@@ -659,11 +624,6 @@ function nextMatchUtc() {
     .filter(x => new Date(x.utc).getTime() > now)
     .sort((a, b) => new Date(a.utc) - new Date(b.utc));
   return future.length ? future[0].utc : null;
-}
-
-function dayLabel(utc) {
-  const d = new Date(new Date(utc).toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
 // ── Rendu ──────────────────────────────────────────────────────────────────
@@ -811,6 +771,7 @@ function computeFrancePos() {
 
 function updateFranceKoFlags() {
   const pos = computeFrancePos();
+  try { localStorage.setItem('cdm_fr_pos', pos || ''); } catch {}
   MATCHES.forEach(m => {
     if (!m.frIf) return;
     m.fr = pos && m.frIf.includes(pos) ? 1 : 0;

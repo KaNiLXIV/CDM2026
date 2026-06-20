@@ -317,6 +317,7 @@
   <footer>Horaires en heure française &middot; Scores ESPN</footer>
 </div>
 
+<script src="shared.js"></script>
 <script>
 // ── Données (phases finales uniquement) ───────────────────────────────────
 const MATCHES_KO = [
@@ -359,31 +360,6 @@ const MATCHES_KO = [
   {utc:"2026-07-19T19:00Z",t:"21:00",m:"Finale",        g:"final",  tv:"m6", v:"New York", final:1},
 ];
 
-// ── Drapeaux ──────────────────────────────────────────────────────────────
-const FLAG = {
-  'Afrique du Sud':'za',    'Algérie':'dz',           'Allemagne':'de',
-  'Angleterre':'gb-eng',    'Arabie saoudite':'sa',    'Argentine':'ar',
-  'Australie':'au',         'Autriche':'at',           'Belgique':'be',
-  'Bosnie-Herzégovine':'ba','Brésil':'br',             'Canada':'ca',
-  'Cap-Vert':'cv',          'Colombie':'co',           'Corée du Sud':'kr',
-  'Croatie':'hr',           'Curaçao':'cw',            "Côte d'Ivoire":'ci',
-  'Espagne':'es',           'France':'fr',             'Ghana':'gh',
-  'Haïti':'ht',             'Irak':'iq',               'Iran':'ir',
-  'Japon':'jp',             'Jordanie':'jo',           'Maroc':'ma',
-  'Mexique':'mx',           'Norvège':'no',            'Nouvelle-Zélande':'nz',
-  'Ouzbékistan':'uz',       'Panama':'pa',             'Paraguay':'py',
-  'Pays-Bas':'nl',          'Portugal':'pt',           'Qatar':'qa',
-  'RD Congo':'cd',          'Rép. tchèque':'cz',       'Suisse':'ch',
-  'Suède':'se',             'Sénégal':'sn',            'Tunisie':'tn',
-  'Turquie':'tr',           'Uruguay':'uy',            'Écosse':'gb-sct',
-  'Égypte':'eg',            'Équateur':'ec',           'États-Unis':'us',
-};
-
-// ── Constantes ────────────────────────────────────────────────────────────
-const DUR_KO   = 160 * 60 * 1000;
-const DAYS     = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-const MONTHS   = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── State ─────────────────────────────────────────────────────────────────
 let scoreMap = {};
@@ -391,14 +367,11 @@ let currentScale = 1;
 let CARD_H   = 66;
 let PAIR_GAP = 6;
 
-function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
-
 // ── ESPN ──────────────────────────────────────────────────────────────────
 async function fetchScores() {
+  const data = await fetchEspnData();
+  if (!data) return false;
   try {
-    const r = await fetch(ESPN_URL);
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
     scoreMap = {};
     (data.events || []).forEach(ev => {
       const comp = ev.competitions?.[0];
@@ -424,9 +397,17 @@ async function fetchScores() {
       if (FLAG[s.hname] && FLAG[s.aname]) m.m = `${s.hname} - ${s.aname}`;
     });
     return true;
-  } catch {
-    return false;
-  }
+  } catch { return false; }
+}
+
+// ── Position France (lue depuis localStorage, écrite par index.html) ───────
+function updateFranceKoFlags() {
+  let pos = '';
+  try { pos = localStorage.getItem('cdm_fr_pos') || ''; } catch {}
+  MATCHES_KO.forEach(m => {
+    if (!m.frIf) return;
+    m.fr = pos && m.frIf.includes(pos) ? 1 : 0;
+  });
 }
 
 // ── Logique temporelle ────────────────────────────────────────────────────
@@ -437,11 +418,6 @@ function matchState(m) {
   if (elapsed >= 0 && elapsed < DUR_KO) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
   if (elapsed >= DUR_KO) return 'ft';
   return 'sched';
-}
-
-function dayLabel(utc) {
-  const d = new Date(new Date(utc).toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
 // ── Rendu d'une carte de match ─────────────────────────────────────────────
@@ -633,6 +609,7 @@ function drawConnectors() {
 // ── Init ──────────────────────────────────────────────────────────────────
 async function refresh() {
   await fetchScores();
+  updateFranceKoFlags();
   render();
   const hasLive = MATCHES_KO.some(m => {
     const s = scoreMap[utcKey(m.utc)];
@@ -646,6 +623,7 @@ window.addEventListener('resize', () => {
   requestAnimationFrame(drawConnectors);
 });
 
+updateFranceKoFlags();
 render();
 refresh();
 </script>
