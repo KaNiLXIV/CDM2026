@@ -220,6 +220,19 @@
   /* ── Spacing between cards per round ── */
   /* Gaps are set inline by JS based on round size */
 
+  .third-place-sep {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 24px;
+    margin-bottom: 8px;
+    padding-left: 2px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
   footer {
     flex-shrink: 0;
     text-align: center;
@@ -290,6 +303,8 @@
       <div class="round" id="col-f">
         <div class="round-label">Finale</div>
         <div class="round-matches" id="rf"></div>
+        <div class="third-place-sep">Petite finale</div>
+        <div class="round-matches" id="third-place"></div>
       </div>
     </div>
   </div>
@@ -317,12 +332,15 @@ const MATCHES_KO = [
   {utc:"2026-07-05T18:00Z",t:"20:00",m:"16e #14", g:"r32", tv:"",    v:"Philadelphie"},
   {utc:"2026-07-05T22:00Z",t:"00:00",m:"16e #15", g:"r32", tv:"",    v:"Toronto"},
   {utc:"2026-07-06T19:00Z",t:"21:00",m:"16e #16", g:"r32", tv:"",    v:"Los Angeles - Rose Bowl"},
-  {utc:"2026-07-06T23:00Z",t:"01:00",m:"16e #17", g:"r32", tv:"",    v:"Montréal"},
   // 8es de finale
   {utc:"2026-07-08T19:00Z",t:"21:00",m:"8e #1",   g:"r16", tv:"m6",  v:"New York",       fr:0, frIf:["1I"]},
   {utc:"2026-07-09T01:00Z",t:"03:00",m:"8e #2",   g:"r16", tv:"m6",  v:"Dallas"},
   {utc:"2026-07-09T19:00Z",t:"21:00",m:"8e #3",   g:"r16", tv:"m6",  v:"Los Angeles"},
   {utc:"2026-07-10T01:00Z",t:"03:00",m:"8e #4",   g:"r16", tv:"m6",  v:"Miami"},
+  {utc:"2026-07-10T19:00Z",t:"21:00",m:"8e #5",   g:"r16", tv:"m6",  v:"Kansas City"},
+  {utc:"2026-07-11T01:00Z",t:"03:00",m:"8e #6",   g:"r16", tv:"m6",  v:"Seattle"},
+  {utc:"2026-07-11T19:00Z",t:"21:00",m:"8e #7",   g:"r16", tv:"m6",  v:"Atlanta"},
+  {utc:"2026-07-12T01:00Z",t:"03:00",m:"8e #8",   g:"r16", tv:"m6",  v:"Vancouver"},
   // Quarts de finale
   {utc:"2026-07-12T19:00Z",t:"21:00",m:"Quart #1",g:"qf",  tv:"m6",  v:"Kansas City"},
   {utc:"2026-07-13T01:00Z",t:"03:00",m:"Quart #2",g:"qf",  tv:"m6",  v:"Los Angeles - Rose Bowl"},
@@ -476,23 +494,28 @@ function cardHtml(m) {
 }
 
 // ── Calcul du gap entre cartes pour centrage par round ────────────────────
-// CARD_H = hauteur d'une carte (px), GAP_BASE = gap entre cartes du round précédent
 const CARD_H   = 82; // hauteur approximative d'une bm card
 const PAIR_GAP = 8;  // gap entre les 2 cartes d'une paire dans R32
 
-function roundGap(roundIdx) {
-  // roundIdx : 0=r32, 1=r16, 2=qf, 3=sf, 4=f
-  // Chaque round double le slot: gap(N) = 2*(CARD_H + gap(N-1)) - CARD_H
-  if (roundIdx === 0) return PAIR_GAP;
-  const slotPrev = CARD_H + roundGap(roundIdx - 1);
-  return 2 * slotPrev - CARD_H;
+// Distance entre centres consécutifs dans un round : double à chaque round
+function step(roundIdx) {
+  return Math.pow(2, roundIdx) * (CARD_H + PAIR_GAP);
 }
 
+// Gap CSS entre cartes d'un round
+function roundGap(roundIdx) {
+  return step(roundIdx) - CARD_H;
+}
+
+// Y du centre de la 1ère carte d'un round
+function firstCenter(roundIdx) {
+  if (roundIdx === 0) return CARD_H / 2;
+  return firstCenter(roundIdx - 1) + step(roundIdx - 1) / 2;
+}
+
+// paddingTop pour que la 1ère carte soit centrée sur son slot
 function topOffset(roundIdx) {
-  // Décalage du premier élément depuis le haut pour centrage
-  if (roundIdx === 0) return 0;
-  const slot = CARD_H + roundGap(roundIdx - 1);
-  return slot / 2 - CARD_H / 2;
+  return firstCenter(roundIdx) - CARD_H / 2;
 }
 
 // ── Rendu du bracket ──────────────────────────────────────────────────────
@@ -501,21 +524,23 @@ function render() {
   MATCHES_KO.forEach(m => { if (byRound[m.g]) byRound[m.g].push(m); });
 
   const rounds = [
-    { id: 'r32',   matches: byRound.r32,   idx: 0 },
-    { id: 'r16',   matches: byRound.r16,   idx: 1 },
-    { id: 'qf',    matches: byRound.qf,    idx: 2 },
-    { id: 'sf',    matches: byRound.sf,    idx: 3 },
-    { id: 'rf',    matches: [...byRound.third, ...byRound.final], idx: 4 },
+    { id: 'r32', matches: byRound.r32,   idx: 0 },
+    { id: 'r16', matches: byRound.r16,   idx: 1 },
+    { id: 'qf',  matches: byRound.qf,    idx: 2 },
+    { id: 'sf',  matches: byRound.sf,    idx: 3 },
+    { id: 'rf',  matches: byRound.final, idx: 4 },
   ];
 
   rounds.forEach(({ id, matches, idx }) => {
     const col = document.getElementById(id);
-    const gap = roundGap(idx);
-    const top = topOffset(idx);
-    col.style.gap = gap + 'px';
-    col.style.paddingTop = top + 'px';
+    col.style.gap        = roundGap(idx) + 'px';
+    col.style.paddingTop = topOffset(idx) + 'px';
     col.innerHTML = matches.map(m => cardHtml(m)).join('');
   });
+
+  // Petite finale en standalone sous l'arbre principal
+  const thirdEl = document.getElementById('third-place');
+  if (thirdEl) thirdEl.innerHTML = byRound.third.map(m => cardHtml(m)).join('');
 
   document.getElementById('stime').textContent =
     new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -530,12 +555,12 @@ function drawConnectors() {
   const bracket = document.getElementById('bracket');
   const bracketRect = bracket.getBoundingClientRect();
 
-  // Paires : r32→r16, r16→qf, qf→sf, sf→final
+  // Paires : r32→r16→qf→sf→final (ratio = nb de cartes source par carte destination)
   const pairDefs = [
-    { fromId: 'r32', toId: 'r16', ratio: 2 },  // 2 r32 → 1 r16 (approximatif, 17 matches)
-    { fromId: 'r16', toId: 'qf',  ratio: 1 },  // 1 r16 → 1 qf  (approximatif)
-    { fromId: 'qf',  toId: 'sf',  ratio: 2 },  // 2 qf  → 1 sf
-    { fromId: 'sf',  toId: 'rf',  ratio: 1 },  // 1 sf  → 1 final (les 2 demis → finale)
+    { fromId: 'r32', toId: 'r16', ratio: 2 },
+    { fromId: 'r16', toId: 'qf',  ratio: 2 },
+    { fromId: 'qf',  toId: 'sf',  ratio: 2 },
+    { fromId: 'sf',  toId: 'rf',  ratio: 2 },
   ];
 
   let paths = '';
