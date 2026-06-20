@@ -754,6 +754,7 @@ function jumpToActive() {
 
 // ── Position France en phase de groupes ───────────────────────────────────
 function computeFrancePos() {
+  if (Object.keys(scoreMap).length === 0) return null;
   const groups = computeStandings();
   const g = groups['Groupe I'];
   if (!g) return null;
@@ -769,14 +770,13 @@ function computeFrancePos() {
 function updateFranceKoFlags() {
   const pos = computeFrancePos();
   try { localStorage.setItem('cdm_fr_pos', pos || ''); } catch {}
+  const qualified = pos === '1I' || pos === '2I';
+  const eliminated = pos !== null && !qualified;
   MATCHES.forEach(m => {
     if (!m.frIf) return;
-    if (pos) {
-      m.fr = m.frIf.includes(pos) ? 1 : 0;
-    } else {
-      // Position pas encore confirmée : tous les parcours possibles de la France
-      m.fr = m.frIf.some(f => f === '1I' || f === '2I') ? 1 : 0;
-    }
+    if (qualified)  { m.fr = m.frIf.includes(pos) ? 1 : 0; }
+    else if (eliminated) { m.fr = 0; }
+    else            { m.fr = m.frIf.some(f => f === '1I' || f === '2I') ? 1 : 0; }
   });
 }
 

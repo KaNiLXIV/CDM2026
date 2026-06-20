@@ -39,9 +39,10 @@ python -m http.server 8000
 ## shared.js
 
 - `FLAG` : dict `nom équipe (français) → code ISO` pour les drapeaux
+- `TEAM_EN_FR` : dict `nom ESPN (anglais) → nom français` pour les équipes KO
 - `DUR_GROUP = 115 min`, `DUR_KO = 160 min` : durées max pour détection locale "terminé"
-- `utcKey(utc)` : tronque à la minute (`"2026-06-11T19:00Z"`) pour matcher les clés ESPN
 - `dayLabel(utc)` : formate en `"Lun 11 juin"` via `Intl.DateTimeFormat` (timezone `Europe/Paris`)
+- `timeLabel(utc)` : retourne l'heure française (`"21:00"`) depuis un UTC
 - `fetchEspnData()` : fetch ESPN avec cache `localStorage` TTL 20 s ; retourne `null` si hors ligne et pas de cache
 
 ESPN URL : `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719`
@@ -62,12 +63,11 @@ Tableau de tous les matchs de poule et de phase finale. Chaque entrée :
 
 ```js
 {
+  espnId: "760432",          // ID ESPN — clé primaire du scoreMap
   utc: "2026-06-11T19:00Z",  // heure UTC du coup d'envoi
-  t:   "21:00",              // heure française affichée
-  m:   "Équipe A - Équipe B",
+  m:   "Équipe A - Équipe B",// hardcodé pour la poule ; mis à jour depuis ESPN pour le KO
   g:   "Groupe A",           // ou "16e de finale", "8e de finale", etc.
   tv:  "m6",                 // badge chaîne (optionnel)
-  v:   "Stade - Ville",
   ph:  "ko",                 // présent si phase éliminatoire
   fr:  1,                    // match France (hardcodé pour la poule)
   frIf: ["1I"],              // conditions France pour les phases KO
@@ -80,20 +80,19 @@ Tableau de tous les matchs de poule et de phase finale. Chaque entrée :
 ### State
 
 ```js
-scoreMap    = {}   // utcKey → { hs, as, st, min, hname, aname }
-scoreMapArr = {}   // utcKey → [entrée, entrée, ...] (matchs simultanés)
+scoreMap = {}  // espnId → { hs, as, st, min, hname, aname, venue }
 ```
 
-`scoreMapArr` résout les matchs simultanés (même `utcKey`) : chaque entrée est dans l'ordre d'apparition ESPN. `bucketIdx` sert à les consommer dans l'ordre lors de `computeStandings()` et de la mise à jour des noms KO.
+`scoreMap` est indexé par l'ID ESPN (`ev.id`) — plus d'ambiguïté pour les matchs simultanés.
 
 ### Sections JS
 
-- **ESPN** `fetchScores()` : peuple `scoreMap` et `scoreMapArr` (avec `hname`/`aname` dans chaque entrée) ; met à jour `m.m` pour les matchs KO via `bucketIdx` pour éviter les collisions simultanées
-- **Classements** `computeStandings()` / `renderStandings()` : calcule pts/GD/GF par groupe depuis les `ft` de `scoreMapArr` ; highlights `.st-q1` (top 2), `.st-q3ok` (meilleurs 3es qualifiés), `.st-fr` (France)
-- **Logique temporelle** `matchState(m)` → `'live'|'ht'|'ft'|'sched'` : ESPN d'abord, fallback local basé sur l'heure écoulée. `liveLabel(m)` : minute ESPN ou label de mi-temps local (fenêtre 46–62 min, alignée sur `matchState`)
+- **ESPN** `fetchScores()` : peuple `scoreMap` keyed par `ev.id` ; noms KO via `TEAM_EN_FR[displayName]` ; stade dans `entry.venue`
+- **Classements** `computeStandings()` / `renderStandings()` : calcule pts/GD/GF par groupe via `scoreMap[m.espnId]` ; highlights `.st-q1` (top 2), `.st-q3ok` (meilleurs 3es qualifiés)
+- **Logique temporelle** `matchState(m)` → `'live'|'ht'|'ft'|'sched'` : ESPN d'abord, fallback local basé sur l'heure écoulée. `liveLabel(m)` : minute ESPN ou label de mi-temps local (fenêtre 46–62 min)
 - **Rendu** `render()`, `rowClass()`, `timeCell()`, `matchHtml()` : liste des matchs par jour avec classes `.row.lv/.fr/.nx/.fn`
 - **Focus card** `updateStatusBar()` : affiche le match live ou le prochain match en haut
-- **France KO** `computeFrancePos()` → `"1I"|"2I"|"3I"|null` ; `updateFranceKoFlags()` écrit en `localStorage('cdm_fr_pos')` et met à jour `m.fr` sur les matchs KO via `frIf`
+- **France KO** `computeFrancePos()` → `"1I"|"2I"|"3I"|null` (retourne `null` si ESPN vide ou groupe incomplet) ; `updateFranceKoFlags()` : qualifié → chemin exact, éliminé → fr=0, inconnu → tous les parcours possibles allumés
 - **Init** `refresh()` : boucle 30 s si live, 120 s sinon
 
 ### Highlights CSS

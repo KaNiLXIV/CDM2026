@@ -46,8 +46,6 @@ const MONTHS     = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','s
 const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── Utilitaires ───────────────────────────────────────────────────────────
-function utcKey(utc) { return utc.slice(0, 16) + 'Z'; }
-
 function dayLabel(utc) {
   // Use en-CA (YYYY-MM-DD) to avoid the fragile toLocaleString→new Date() round-trip
   const ymd = new Intl.DateTimeFormat('en-CA', {
