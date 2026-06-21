@@ -504,12 +504,14 @@ async function fetchScores() {
 // ── Classements ────────────────────────────────────────────────────────────
 function computeStandings() {
   const groups = {};
+  const h2h = {}; // group → teamA → teamB → {gf, ga}
   MATCHES.forEach(m => {
     if (m.ph === 'ko') return;
     const parts = m.m.split(' - ');
     if (parts.length < 2) return;
     const [ta, tb] = parts;
     if (!groups[m.g]) groups[m.g] = {};
+    if (!h2h[m.g])    h2h[m.g]    = {};
     const g = groups[m.g];
     if (!g[ta]) g[ta] = { w:0, d:0, l:0, gf:0, ga:0, played:0 };
     if (!g[tb]) g[tb] = { w:0, d:0, l:0, gf:0, ga:0, played:0 };
@@ -522,8 +524,80 @@ function computeStandings() {
     if      (hs > as) { g[ta].w++; g[tb].l++; }
     else if (as > hs) { g[tb].w++; g[ta].l++; }
     else              { g[ta].d++; g[tb].d++; }
+    // confrontations directes
+    const hg = h2h[m.g];
+    if (!hg[ta]) hg[ta] = {};
+    if (!hg[tb]) hg[tb] = {};
+    hg[ta][tb] = { gf: hs, ga: as };
+    hg[tb][ta] = { gf: as, ga: hs };
   });
-  return groups;
+  return { groups, h2h };
+}
+
+// Tri FIFA officiel WC 2026 (art. règlement)
+// 1. pts global ; 2-4. H2H pts/GD/GF ; 5. ré-applique H2H sur sous-groupe ;
+// 6. GD global ; 7. GF global ; 8. tirage (alpha)
+function fifaSort(rows, h2hMap) {
+  function h2hFor(names) {
+    const s = {};
+    names.forEach(n => s[n] = { pts:0, gd:0, gf:0 });
+    for (const a of names) for (const b of names) {
+      if (a === b) continue;
+      const r = h2hMap?.[a]?.[b];
+      if (!r) continue;
+      s[a].gf += r.gf;
+      s[a].gd += r.gf - r.ga;
+      if      (r.gf > r.ga) s[a].pts += 3;
+      else if (r.gf === r.ga) s[a].pts += 1;
+    }
+    return s;
+  }
+
+  // Résout un groupe à égalité de pts via H2H puis GD/GF global
+  function resolveGroup(group) {
+    if (group.length <= 1) return group;
+    const h = h2hFor(group.map(r => r.name));
+    group.sort((a, b) =>
+      (h[b.name].pts - h[a.name].pts) ||
+      (h[b.name].gd  - h[a.name].gd)  ||
+      (h[b.name].gf  - h[a.name].gf)
+    );
+    // Sous-groupes encore à égalité après H2H
+    const result = [];
+    let i = 0;
+    while (i < group.length) {
+      let j = i + 1;
+      while (j < group.length &&
+             h[group[j].name].pts === h[group[i].name].pts &&
+             h[group[j].name].gd  === h[group[i].name].gd  &&
+             h[group[j].name].gf  === h[group[i].name].gf) j++;
+      const sub = group.slice(i, j);
+      if (sub.length > 1 && sub.length < group.length) {
+        // Ré-applique H2H sur le sous-groupe réduit (règle FIFA)
+        result.push(...resolveGroup(sub));
+      } else if (sub.length > 1) {
+        // H2H ne départage pas → GD global, GF global, tirage (alpha)
+        sub.sort((a, b) => b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+        result.push(...sub);
+      } else {
+        result.push(...sub);
+      }
+      i = j;
+    }
+    return result;
+  }
+
+  // Trier par pts, puis résoudre les groupes à égalité
+  rows.sort((a, b) => b.pts - a.pts);
+  const result = [];
+  let i = 0;
+  while (i < rows.length) {
+    let j = i + 1;
+    while (j < rows.length && rows[j].pts === rows[i].pts) j++;
+    result.push(...resolveGroup(rows.slice(i, j)));
+    i = j;
+  }
+  return result;
 }
 
 function renderStandings() {
@@ -531,7 +605,7 @@ function renderStandings() {
   if (sig === lastStandingsSig) return;
   lastStandingsSig = sig;
   const container = document.getElementById('standings');
-  const groups = computeStandings();
+  const { groups, h2h } = computeStandings();
   const seen = new Set();
   const groupOrder = [];
   MATCHES.forEach(m => { if (!m.ph && !seen.has(m.g)) { seen.add(m.g); groupOrder.push(m.g); } });
@@ -541,19 +615,18 @@ function renderStandings() {
   const rowsByGroup = {};
   groupOrder.forEach(gname => {
     const teams = groups[gname] || {};
-    rowsByGroup[gname] = Object.entries(teams)
-      .map(([name, s]) => ({
-        name, played: s.played, w: s.w, d: s.d, l: s.l,
-        gf: s.gf, ga: s.ga, gd: s.gf - s.ga, pts: s.w * 3 + s.d,
-      }))
-      .sort(sortFn);
+    const rows = Object.entries(teams).map(([name, s]) => ({
+      name, played: s.played, w: s.w, d: s.d, l: s.l,
+      gf: s.gf, ga: s.ga, gd: s.gf - s.ga, pts: s.w * 3 + s.d,
+    }));
+    rowsByGroup[gname] = fifaSort(rows, h2h[gname]);
   });
   const thirds = [];
   groupOrder.forEach(gname => {
     const rows = rowsByGroup[gname];
     if (rows.length >= 3) thirds.push({ ...rows[2], group: gname });
   });
-  thirds.sort(sortFn);
+  thirds.sort(sortFn); // inter-groupes : pas de h2h possible
   const qualifiedThirds = new Set(thirds.slice(0, 8).map(t => t.name));
   const anyResults = thirds.some(t => t.played > 0);
 
@@ -755,12 +828,13 @@ function jumpToActive() {
 // ── Position France en phase de groupes ───────────────────────────────────
 function computeFrancePos() {
   if (Object.keys(scoreMap).length === 0) return null;
-  const groups = computeStandings();
+  const { groups, h2h } = computeStandings();
   const g = groups['Groupe I'];
   if (!g) return null;
-  const rows = Object.entries(g)
-    .map(([name, s]) => ({ name, played: s.played, pts: s.w*3+s.d, gd: s.gf-s.ga, gf: s.gf }))
-    .sort((a, b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.name.localeCompare(b.name));
+  const rows = fifaSort(
+    Object.entries(g).map(([name, s]) => ({ name, played: s.played, pts: s.w*3+s.d, gd: s.gf-s.ga, gf: s.gf })),
+    h2h['Groupe I']
+  );
   const allDone = rows.every(r => r.played === 3);
   if (!allDone) return null;
   const idx = rows.findIndex(r => r.name === 'France');
