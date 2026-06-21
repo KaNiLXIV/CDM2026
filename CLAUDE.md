@@ -29,21 +29,33 @@ python -m http.server 8000
 --bg:      #0c1810
 --surface: #122016
 --surf2:   #1a2e1e
---accent:  #4ade80   /* vert vif */
+--bd:      rgba(255,255,255,0.06)
+--bd2:     rgba(255,255,255,0.11)
+--text:    #ecfdf5
 --muted:   #4d7a55
+--accent:  #4ade80   /* vert vif */
+--fr-bg:   rgba(0,35,149,0.20)
 --fr-bd:   #002395   /* bleu France */
---lv-c:    #f87171   /* rouge live */
---gold:    #fbbf24   /* or (finale, prochain match) */
+--nx-bg:   rgba(251,191,36,0.07)
+--nx-bd:   #fbbf24   /* or (prochain match) */
+--lv-bg:   rgba(248,113,113,0.07)
+--lv-bd:   #f87171   /* rouge live (bordure) */
+--lv-c:    #f87171   /* rouge live (texte) */
+--gold:    #fbbf24   /* or (finale) */
+--m6-bg:   rgba(74,222,128,0.12)
+--m6-tx:   #86efac
+--r:       8px       /* border-radius */
 ```
 
 ## shared.js
 
-- `FLAG` : dict `nom équipe (français) → code ISO` pour les drapeaux
-- `TEAM_EN_FR` : dict `nom ESPN (anglais) → nom français` pour les équipes KO
-- `DUR_GROUP = 115 min`, `DUR_KO = 160 min` : durées max pour détection locale "terminé"
-- `dayLabel(utc)` : formate en `"Lun 11 juin"` via `Intl.DateTimeFormat` (timezone `Europe/Paris`)
-- `timeLabel(utc)` : retourne l'heure française (`"21:00"`) depuis un UTC
-- `fetchEspnData()` : fetch ESPN avec cache `localStorage` TTL 20 s ; retourne `null` si hors ligne et pas de cache
+- `FLAG` : dict `nom équipe (français) → code ISO` pour les drapeaux (48 équipes)
+- `TEAM_EN_FR` : dict `nom ESPN (anglais) → nom français` pour la traduction des noms KO
+- `DUR_GROUP = 115 * 60 * 1000` ms, `DUR_KO = 160 * 60 * 1000` ms : durées max pour détection locale "terminé"
+- `DAYS` / `MONTHS` : tableaux français pour formatage de dates
+- `dayLabel(utc)` : formate en `"Lun 11 juin"` — utilise le locale `en-CA` (format YYYY-MM-DD) puis reconstruit la date UTC pour éviter les dérives de fuseau
+- `timeLabel(utc)` : retourne l'heure française (`"21:00"`) via `Intl.DateTimeFormat` timezone `Europe/Paris`
+- `fetchEspnData()` : fetch ESPN avec cache `localStorage` clé `cdm_espn` TTL 20 s ; retourne `null` si hors ligne et pas de cache
 
 ESPN URL : `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719`
 
@@ -51,15 +63,15 @@ ESPN URL : `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scor
 
 ### Mise en page
 
-Grid 2 colonnes (`1fr 1fr`) + header pleine largeur. Mobile : 1 colonne sous 680 px.
+Grid 2 colonnes (`1fr 1fr`) + header pleine largeur. Pas de breakpoint mobile dans le CSS actuel.
 
 - **Header** : titre, focus card (match en cours / prochain), heure courante
 - **Sidebar gauche** : classements de groupe défilables + lien vers `bracket.html`
-- **Colonne droite** : légende + liste des matchs par jour
+- **Colonne droite** : légende + barre de filtre groupe + liste des matchs par jour
 
 ### Données MATCHES
 
-Tableau de tous les matchs de poule et de phase finale. Chaque entrée :
+72 matchs au total : 48 de poule (Groupes A–L, 4 équipes par groupe) + 24 de phase finale. Chaque entrée :
 
 ```js
 {
@@ -75,24 +87,27 @@ Tableau de tous les matchs de poule et de phase finale. Chaque entrée :
 }
 ```
 
-`KO_PHASES = ['16e','8e','Quart','Demi','Petite','Finale']` : ordre d'affichage des sections KO.
+`KO_PHASES = ['16e','8e','Quart','Demi','Petite','Finale']` : préfixes utilisés pour grouper les sections KO.
+
+La France est en **Groupe I**. Les matchs de France en poule ont `fr:1` hardcodé. Pour les matchs KO, `frIf` peut valoir `["1I"]`, `["2I"]` ou `["1I","2I"]` selon le chemin probable.
 
 ### State
 
 ```js
-scoreMap = {}  // espnId → { hs, as, st, min, hname, aname, venue }
+scoreMap = {}             // espnId → { hs, as, st, min, hname, aname, venue }
+activeGroupFilter = null  // nom du groupe filtré ou null
 ```
-
-`scoreMap` est indexé par l'ID ESPN (`ev.id`) — plus d'ambiguïté pour les matchs simultanés.
 
 ### Sections JS
 
 - **ESPN** `fetchScores()` : peuple `scoreMap` keyed par `ev.id` ; noms KO via `TEAM_EN_FR[displayName]` ; stade dans `entry.venue`
-- **Classements** `computeStandings()` / `renderStandings()` : calcule pts/GD/GF par groupe via `scoreMap[m.espnId]` ; highlights `.st-q1` (top 2), `.st-q3ok` (meilleurs 3es qualifiés)
+- **Classements** `computeStandings()` → `{ groups, h2h }` : calcule pts/GD/GF et confrontations directes par groupe via `scoreMap[m.espnId]` ; `fifaSort(rows, h2hMap)` : tri officiel FIFA WC 2026 — pts global → H2H (pts/GD/GF) → sous-groupes H2H récursifs → GD global → GF global → alpha
+- **Rendu classements** `renderStandings()` : 12 tableaux sur 3 colonnes. Top 2 → `.st-q1` (fond doré). Meilleurs 8 troisièmes qualifiés → `.st-q3ok` (fond orange). Groupe I (France) → `.gtable.fr-group`
+- **Filtre groupe** : clic sur l'entête d'un tableau → `toggleGroupFilter(gname)` — filtre les matchs affichés et montre une barre de filtre avec bouton "Tous les matchs"
 - **Logique temporelle** `matchState(m)` → `'live'|'ht'|'ft'|'sched'` : ESPN d'abord, fallback local basé sur l'heure écoulée. `liveLabel(m)` : minute ESPN ou label de mi-temps local (fenêtre 46–62 min)
 - **Rendu** `render()`, `rowClass()`, `timeCell()`, `matchHtml()` : liste des matchs par jour avec classes `.row.lv/.fr/.nx/.fn`
-- **Focus card** `updateStatusBar()` : affiche le match live ou le prochain match en haut
-- **France KO** `computeFrancePos()` → `"1I"|"2I"|"3I"|null` (retourne `null` si ESPN vide ou groupe incomplet) ; `updateFranceKoFlags()` : qualifié → chemin exact, éliminé → fr=0, inconnu → tous les parcours possibles allumés
+- **Focus card** `updateStatusBar(next)` : affiche le match live ou le prochain match en haut. `jumpToActive()` : scroll vers le match actif au clic sur la focus card
+- **France KO** `computeFrancePos()` → `"1I"|"2I"|"3I"|null` — retourne `null` si scoreMap vide ou si les 3 matchs du groupe ne sont pas tous terminés (`played === 3` pour tous) ; `updateFranceKoFlags()` : qualifié → chemin exact activé, éliminé → `fr=0`, inconnu → tous les parcours possibles allumés. Écrit `localStorage('cdm_fr_pos')` pour `bracket.html`
 - **Init** `refresh()` : boucle 30 s si live, 120 s sinon
 
 ### Highlights CSS
@@ -104,8 +119,8 @@ scoreMap = {}  // espnId → { hs, as, st, min, hname, aname, venue }
 | `.row.nx` | prochain match — bordure or |
 | `.row.fn` | finale — bordure or |
 | `.st-q1` | top 2 groupe — fond doré |
-| `.st-q3ok` | meilleurs 3es — fond orange |
-| `.st-fr` | ligne France — fond bleu |
+| `.st-q3ok` | meilleurs 3es qualifiés — fond orange |
+| `.gtable.fr-group` | tableau Groupe I — bordure et header bleus |
 
 ## bracket.html
 
@@ -118,26 +133,37 @@ Bracket double sens, sans défilement, tout en une fenêtre :
       ←— côté gauche —→  centre  ←— côté droit —→
 ```
 
-La **Finale est au centre** avec la petite finale en dessous (sans connecteur). Les colonnes miroir sont rendues séparément avec le même algorithme de positionnement.
+La **Finale est au centre** (colonne `#col-rf`, `idx=3`, même niveau que les demis). La petite finale est dans `#third-place` sous la finale, sans connecteur SVG.
 
 ### Données MATCHES_KO
 
-- 16 matchs `g:"r32"` (16es, #1–#16)
-- 8 matchs `g:"r16"` (8es, #1–#8)
-- 4 matchs `g:"qf"`, 2 `g:"sf"`, 1 `g:"final"`, 1 `g:"third"`
+Tableau séparé de 32 matchs uniquement (pas de matchs de poule) :
 
-Même structure que `MATCHES`. Noms mis à jour depuis ESPN dès que connus.
+- 16 matchs `g:"r32"` (16es) — 8 côté gauche (indices 0–7), 8 côté droit (indices 8–15)
+- 8 matchs `g:"r16"` (8es) — 4 gauche, 4 droite
+- 4 matchs `g:"qf"`, 2 `g:"sf"`, 1 `g:"third"`, 1 `g:"final"`
+
+Même structure que `MATCHES` (espnId, utc, m, g, tv, fr, frIf, final). Noms mis à jour depuis ESPN dès que connus. Le champ `venue` n'est pas présent dans le `scoreMap` de `bracket.html`.
+
+### State
+
+```js
+scoreMap = {}     // espnId → { hs, as, st, min, hname, aname }
+currentScale = 1
+CARD_H = 66       // mesuré dynamiquement après premier rendu
+PAIR_GAP = 6
+```
 
 ### Positionnement vertical
 
 ```js
 step(idx)        = 2^idx * (CARD_H + PAIR_GAP)        // distance centre-à-centre
 roundGap(idx)    = step(idx) - CARD_H                  // gap CSS entre cartes
-firstCenter(idx) = firstCenter(idx-1) + step(idx-1)/2 // Y du 1er centre
+firstCenter(idx) = firstCenter(idx-1) + step(idx-1)/2 // Y du 1er centre (base: CARD_H/2)
 topOffset(idx)   = firstCenter(idx) - CARD_H/2        // paddingTop de la colonne
 ```
 
-`CARD_H` est mesuré dynamiquement après un premier rendu à gap=0. `PAIR_GAP = 6`. La Finale utilise `idx=3` (même niveau que les demis).
+`CARD_H` est mesuré dynamiquement sur `#r32l .bm` après un premier rendu à gap=0, puis les gaps sont appliqués au second passage. `PAIR_GAP = 6`.
 
 ### Auto-scale
 
@@ -150,15 +176,16 @@ Cap à 1.1. Recalculé au `resize`. Les connecteurs SVG sont redessinés après 
 
 ### Connecteurs SVG
 
-`drawConnectors()` trace des lignes en L via `getBoundingClientRect`, coordonnées divisées par `currentScale` pour rester dans l'espace SVG. `dir='ltr'` (côté gauche) ou `dir='rtl'` (côté droit).
+`drawConnectors()` trace des lignes en L via `getBoundingClientRect`, coordonnées divisées par `currentScale` pour rester dans l'espace SVG non-transformé. `dir='ltr'` (côté gauche) ou `dir='rtl'` (côté droit). L'overlay SVG `#connectors` est en `position:absolute` dans `.bracket`.
 
 ### France KO
 
-`updateFranceKoFlags()` lit `localStorage('cdm_fr_pos')` (écrit par `index.html`) et met à jour `m.fr` via `frIf`. Appelé avant chaque `render()`.
+`updateFranceKoFlags()` lit `localStorage('cdm_fr_pos')` (écrit par `index.html`) et met à jour `m.fr` via `frIf`. Appelé avant chaque `render()`. Si `pos` est vide/null, tous les matchs avec `frIf` sont allumés.
 
 ## Conventions
 
 - Variables/fonctions en anglais, UI et commits en français
 - Pas de tests automatisés — validation visuelle dans le navigateur
-- Horaires stockés en UTC (`.utc`), affichés en heure française (`.t`)
+- Horaires stockés en UTC (`.utc`), affichés en heure française
 - Tournoi : 11 juin – 19 juillet 2026
+- `localStorage` clés : `cdm_espn` (cache ESPN TTL 20 s), `cdm_fr_pos` (position finale France en poule)
