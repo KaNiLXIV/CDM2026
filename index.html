@@ -885,6 +885,7 @@ function jumpToActive() {
                || MATCHES.find(x => x.utc === next);
   if (!target) return;
 
+  if (activeGroupFilter) clearGroupFilter();
   if (!document.querySelector(`[data-utc="${target.utc}"]`)) render();
 
   setTimeout(() => {
