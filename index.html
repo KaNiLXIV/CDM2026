@@ -698,13 +698,9 @@ function renderStandings() {
     html += `</tbody></table></div>`;
   });
   container.innerHTML = html || '<p class="empty">Aucune donnée disponible.</p>';
-  // Rendre les en-têtes de groupe cliquables
   container.querySelectorAll('.gtable').forEach(el => {
     const head = el.querySelector('.gtable-head');
-    if (!head) return;
-    const gname = head.textContent.trim();
-    if (activeGroupFilter === gname) el.classList.add('active-filter');
-    head.addEventListener('click', () => toggleGroupFilter(gname));
+    if (activeGroupFilter === head?.textContent.trim()) el.classList.add('active-filter');
   });
 }
 
@@ -790,11 +786,8 @@ function toggleGroupFilter(gname) {
 }
 
 function clearGroupFilter() {
-  activeGroupFilter = null;
-  lastStandingsSig = '';
-  renderStandings();
-  render();
-  document.getElementById('filter-bar').classList.remove('visible');
+  document.getElementById('filter-label').textContent = '';
+  toggleGroupFilter(activeGroupFilter); // active → null
 }
 
 function render() {
@@ -943,6 +936,13 @@ async function refresh() {
   const hasLive = MATCHES.some(x => { const st = matchState(x); return st === 'live' || st === 'ht'; });
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
+
+// Listener délégué unique — attaché une seule fois, pas recréé à chaque renderStandings()
+document.getElementById('standings').addEventListener('click', e => {
+  const head = e.target.closest('.gtable-head');
+  if (!head) return;
+  toggleGroupFilter(head.textContent.trim());
+});
 
 render();
 renderStandings();
