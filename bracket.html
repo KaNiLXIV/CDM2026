@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau — Coupe du Monde 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css">
+<style>
+  :root {
+    --bg:      #0c1810;
+    --surface: #122016;
+    --surf2:   #1a2e1e;
+    --bd:      rgba(255,255,255,0.06);
+    --bd2:     rgba(255,255,255,0.11);
+    --bd3:     rgba(255,255,255,0.18);
+    --text:    #ecfdf5;
+    --muted:   #4d7a55;
+    --accent:  #4ade80;
+    --fr-bg:   rgba(0,35,149,0.20);
+    --fr-bd:   #002395;
+    --lv-bd:   #f87171;
+    --lv-c:    #f87171;
+    --gold:    #fbbf24;
+    --m6-bg:   rgba(74,222,128,0.12);
+    --m6-tx:   #86efac;
+    --r:       6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1.5rem;
+    border-bottom: 1px solid var(--bd);
+    background: linear-gradient(180deg, #091410 0%, var(--surface) 100%);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 1rem; }
+
+  .back-link {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid var(--bd2);
+    border-radius: 20px;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .back-link:hover { color: var(--accent); border-color: var(--accent); }
+
+  .header-title { display: flex; flex-direction: column; }
+  .eyebrow { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+
+  #stime { font-size: 13px; color: var(--muted); flex-shrink: 0; }
+
+  /* ── Legend ── */
+  .legend-bar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 6px 1.5rem;
+    border-bottom: 1px solid var(--bd);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Bracket scroll container ── */
+  .bracket-outer {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 14px 12px 12px;
+  }
+
+  /* ── Bracket ── */
+  .bracket {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+    transform-origin: top center;
+  }
+
+  /* SVG connector overlay */
+  #connectors {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* ── Round column ── */
+  .round {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+
+  .round-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .round-matches {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+  }
+
+  .connector-gap {
+    width: 22px;
+    flex-shrink: 0;
+  }
+
+  /* ── Match card ── */
+  .bm {
+    width: 150px;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    background: var(--surface);
+    overflow: hidden;
+    transition: border-color .15s, background .15s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .bm:hover { border-color: var(--bd3); background: var(--surf2); }
+  .bm.fr  { border-color: var(--fr-bd); background: var(--fr-bg); }
+  .bm.lv  { border-color: var(--lv-bd); }
+  .bm.fn  { border-color: var(--gold); background: rgba(251,191,36,0.05); }
+
+  .bm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 7px 3px;
+    border-bottom: 1px solid var(--bd);
+  }
+  .bm-date         { font-size: 9.5px; color: var(--muted); white-space: nowrap; }
+  .bm-status-live  { font-size: 9.5px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
+  .bm-status-ft    { font-size: 9.5px; color: var(--muted); letter-spacing: .02em; }
+  .bm-badge-m6     { font-size: 8px; padding: 1px 4px; border-radius: 20px; font-weight: 600;
+                     background: var(--m6-bg); color: var(--m6-tx); }
+
+  .bm-teams { padding: 4px 7px 5px; display: flex; flex-direction: column; gap: 3px; }
+
+  .bm-team {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .bm-team .fi  { font-size: .9em; border-radius: 2px; flex-shrink: 0; }
+  .bm-tname {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .bm-tname.ko   { color: var(--muted); font-style: italic; font-weight: 400; }
+  .bm-tscore {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    min-width: 12px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .bm-tscore.win { color: var(--text); }
+  .bm-tscore.lv  { color: var(--lv-c); }
+
+  .bm.fr .bm-tname { color: #c8d8ff; }
+
+  /* Petite finale sous la finale dans la colonne centrale */
+  .third-place-sep {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 20px;
+    margin-bottom: 8px;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  footer {
+    flex-shrink: 0;
+    text-align: center;
+    padding: 7px;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--bd);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="app-header">
+    <div class="header-left">
+      <a href="index.html" class="back-link">← Matchs</a>
+      <div class="header-title">
+        <span class="eyebrow">FIFA World Cup 2026</span>
+        <h1>Tableau de la phase finale</h1>
+      </div>
+    </div>
+    <span id="stime"></span>
+  </header>
+
+  <div class="legend-bar">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Finale</div>
+  </div>
+
+  <div class="bracket-outer" id="bracket-outer">
+    <div class="bracket" id="bracket">
+      <svg id="connectors"></svg>
+
+      <!-- Côté gauche -->
+      <div class="round" id="col-r32l">
+        <div class="round-label">16es de finale</div>
+        <div class="round-matches" id="r32l"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-r16l">
+        <div class="round-label">8es de finale</div>
+        <div class="round-matches" id="r16l"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-qfl">
+        <div class="round-label">Quarts</div>
+        <div class="round-matches" id="qfl"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-sfl">
+        <div class="round-label">Demis</div>
+        <div class="round-matches" id="sfl"></div>
+      </div>
+      <div class="connector-gap"></div>
+
+      <!-- Centre -->
+      <div class="round" id="col-rf">
+        <div class="round-label">Finale</div>
+        <div class="round-matches" id="rf"></div>
+        <div class="third-place-sep">3e place</div>
+        <div class="round-matches" id="third-place"></div>
+      </div>
+
+      <div class="connector-gap"></div>
+      <!-- Côté droit (miroir) -->
+      <div class="round" id="col-sfr">
+        <div class="round-label">Demis</div>
+        <div class="round-matches" id="sfr"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-qfr">
+        <div class="round-label">Quarts</div>
+        <div class="round-matches" id="qfr"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-r16r">
+        <div class="round-label">8es de finale</div>
+        <div class="round-matches" id="r16r"></div>
+      </div>
+      <div class="connector-gap"></div>
+      <div class="round" id="col-r32r">
+        <div class="round-label">16es de finale</div>
+        <div class="round-matches" id="r32r"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+// ── Données (phases finales uniquement) ───────────────────────────────────
+const MATCHES_KO = [
+  // ── 16es de finale ────────────────────────────────────────────────────────
+  // Côté gauche (slots 0-7) : M74 M77 M73 M75 / M83 M84 M81 M82
+  {espnId:"760489",utc:"2026-06-29T20:30Z",m:"16e #3",  g:"r32"},                      // M74 GER/3ABCDF
+  {espnId:"760492",utc:"2026-06-30T21:00Z",m:"16e #6",  g:"r32",tv:"m6",frIf:["1I"]}, // M77 1I/3CDFGH
+  {espnId:"760486",utc:"2026-06-28T19:00Z",m:"16e #1",  g:"r32"},                      // M73 2A/2B
+  {espnId:"760488",utc:"2026-06-30T01:00Z",m:"16e #4",  g:"r32"},                      // M75 1F/2C
+  {espnId:"760496",utc:"2026-07-02T23:00Z",m:"16e #12", g:"r32"},                      // M83 2K/2L
+  {espnId:"760497",utc:"2026-07-02T19:00Z",m:"16e #11", g:"r32"},                      // M84 1H/2J
+  {espnId:"760493",utc:"2026-07-01T20:00Z",m:"16e #9",  g:"r32"},                      // M81 USA/3BEFIJ
+  {espnId:"760494",utc:"2026-07-02T00:00Z",m:"16e #10", g:"r32"},                      // M82 1G/3AEHIJ
+  // Côté droit (slots 8-15) : M76 M78 M79 M80 / M86 M88 M85 M87
+  {espnId:"760487",utc:"2026-06-29T17:00Z",m:"16e #2",  g:"r32"},                      // M76 1C/2F
+  {espnId:"760490",utc:"2026-06-30T17:00Z",m:"16e #5",  g:"r32",frIf:["2I"]},          // M78 2E/2I
+  {espnId:"760491",utc:"2026-07-01T01:00Z",m:"16e #7",  g:"r32"},                      // M79 MEX/3CEFHI
+  {espnId:"760495",utc:"2026-07-01T16:00Z",m:"16e #8",  g:"r32"},                      // M80 1L/3EHIJK
+  {espnId:"760500",utc:"2026-07-03T22:00Z",m:"16e #15", g:"r32"},                      // M86 1J/2H
+  {espnId:"760499",utc:"2026-07-03T18:00Z",m:"16e #14", g:"r32"},                      // M88 2D/2G
+  {espnId:"760498",utc:"2026-07-03T03:00Z",m:"16e #13", g:"r32"},                      // M85 1B/3EFGIJ
+  {espnId:"760501",utc:"2026-07-04T01:30Z",m:"16e #16", g:"r32"},                      // M87 1K/3DEIJL
+  // ── 8es de finale ─────────────────────────────────────────────────────────
+  // Côté gauche (slots 0-3) : M89 M90 M93 M94
+  {espnId:"760503",utc:"2026-07-04T21:00Z",m:"8e #2",   g:"r16",tv:"m6",frIf:["1I"]}, // M89 W74/W77
+  {espnId:"760502",utc:"2026-07-04T17:00Z",m:"8e #1",   g:"r16",tv:"m6"},              // M90 W73/W75
+  {espnId:"760506",utc:"2026-07-06T19:00Z",m:"8e #5",   g:"r16",tv:"m6"},              // M93 W83/W84
+  {espnId:"760507",utc:"2026-07-07T00:00Z",m:"8e #6",   g:"r16",tv:"m6"},              // M94 W81/W82
+  // Côté droit (slots 4-7) : M91 M92 M95 M96
+  {espnId:"760504",utc:"2026-07-05T20:00Z",m:"8e #3",   g:"r16",tv:"m6",frIf:["2I"]}, // M91 W76/W78
+  {espnId:"760505",utc:"2026-07-06T00:00Z",m:"8e #4",   g:"r16",tv:"m6"},              // M92 W79/W80
+  {espnId:"760509",utc:"2026-07-07T16:00Z",m:"8e #7",   g:"r16",tv:"m6"},              // M95 W86/W88
+  {espnId:"760508",utc:"2026-07-07T20:00Z",m:"8e #8",   g:"r16",tv:"m6"},              // M96 W85/W87
+  // ── Quarts de finale ──────────────────────────────────────────────────────
+  {espnId:"760510",utc:"2026-07-09T20:00Z",m:"Quart #1",g:"qf", tv:"m6",frIf:["1I"]}, // M97  W89/W90
+  {espnId:"760511",utc:"2026-07-10T19:00Z",m:"Quart #2",g:"qf", tv:"m6"},              // M98  W93/W94
+  {espnId:"760512",utc:"2026-07-11T21:00Z",m:"Quart #3",g:"qf", tv:"m6",frIf:["2I"]}, // M99  W91/W92
+  {espnId:"760513",utc:"2026-07-12T01:00Z",m:"Quart #4",g:"qf", tv:"m6"},              // M100 W95/W96
+  // ── Demi-finales ──────────────────────────────────────────────────────────
+  {espnId:"760514",utc:"2026-07-14T19:00Z",m:"Demi #1", g:"sf", tv:"m6",frIf:["1I"]}, // M101 W97/W98
+  {espnId:"760515",utc:"2026-07-15T19:00Z",m:"Demi #2", g:"sf", tv:"m6",frIf:["2I"]}, // M102 W99/W100
+  // ── Petite finale + Finale ────────────────────────────────────────────────
+  {espnId:"760516",utc:"2026-07-18T21:00Z",m:"Petite finale",g:"third",tv:"m6"},
+  {espnId:"760517",utc:"2026-07-19T19:00Z",m:"Finale",       g:"final", tv:"m6",final:1,frIf:["1I","2I"]},
+];
+
+
+// ── State ─────────────────────────────────────────────────────────────────
+let scoreMap = {};
+let currentScale = 1;
+let CARD_H   = 66;
+let PAIR_GAP = 6;
+
+// ── ESPN ──────────────────────────────────────────────────────────────────
+async function fetchScores() {
+  const data = await fetchEspnData();
+  if (!data) return false;
+  try {
+    const newMap = {};
+    (data.events || []).forEach(ev => {
+      const comp = ev.competitions?.[0];
+      if (!comp) return;
+      const sn   = comp.status?.type?.name || '';
+      const isLv = sn === 'STATUS_IN_PROGRESS';
+      const isHT = sn === 'STATUS_HALFTIME';
+      const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const home = comp.competitors?.find(c => c.homeAway === 'home');
+      const away = comp.competitors?.find(c => c.homeAway === 'away');
+      newMap[ev.id] = {
+        hs:    home?.score ?? null,
+        as:    away?.score ?? null,
+        st:    isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:   isHT ? 'MT' : (comp.status?.displayClock || ''),
+        hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
+        aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
+      };
+    });
+    scoreMap = newMap;
+    MATCHES_KO.forEach(m => {
+      const s = scoreMap[m.espnId];
+      if (!s || !s.hname || !s.aname) return;
+      m.m = `${s.hname} - ${s.aname}`;
+    });
+    return true;
+  } catch { return false; }
+}
+
+// ── Position France (lue depuis localStorage, écrite par index.html) ───────
+function updateFranceKoFlags() {
+  let pos = null;
+  try { pos = localStorage.getItem('cdm_fr_pos'); } catch {}
+  const qualified = pos === '1I' || pos === '2I';
+  const eliminated = pos !== null && pos !== '' && !qualified;
+  MATCHES_KO.forEach(m => {
+    if (!m.frIf) return;
+    if (qualified)       { m.fr = m.frIf.includes(pos) ? 1 : 0; }
+    else if (eliminated) { m.fr = 0; }
+    else                 { m.fr = m.frIf.some(f => f === '1I' || f === '2I') ? 1 : 0; }
+  });
+}
+
+// ── Logique temporelle ────────────────────────────────────────────────────
+function matchState(m) {
+  const s = scoreMap[m.espnId];
+  if (s && s.st !== 'sched') return s.st;
+  const elapsed = Date.now() - new Date(m.utc).getTime();
+  if (elapsed >= 0 && elapsed < DUR_KO) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
+  if (elapsed >= DUR_KO) return 'ft';
+  return 'sched';
+}
+
+// ── Rendu d'une carte de match ─────────────────────────────────────────────
+function cardHtml(m) {
+  const s    = scoreMap[m.espnId];
+  const st   = matchState(m);
+  const isLv = st === 'live' || st === 'ht';
+  const isFT = st === 'ft';
+
+  const parts    = m.m.split(' - ');
+  const hasTeams = parts.length === 2;
+  const [ta, tb] = hasTeams ? parts : [m.m, null];
+
+  let hs = null, as_ = null;
+  if (s && s.hs !== null && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
+
+  const scoreWin = (score, other) => {
+    if (score === null) return '';
+    const cls = isLv ? 'lv' : (isFT && score > other ? 'win' : '');
+    return `<span class="bm-tscore ${cls}">${score}</span>`;
+  };
+
+  // Date avant l'heure
+  let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${timeLabel(m.utc)}</span>`;
+  let badgeHtml  = '';
+  if (isLv) {
+    const min = s?.min || (st === 'ht' ? 'MT' : '');
+    statusHtml = `<span class="bm-status-live">⬤ ${min || 'LIVE'}</span>`;
+  } else if (isFT) {
+    badgeHtml = `<span class="bm-status-ft">FT</span>`;
+  }
+  if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
+
+  function teamRow(name, score, other) {
+    if (!name) return '';
+    const code  = FLAG[name];
+    const flag  = code ? `<span class="fi fi-${code}"></span>` : '';
+    const isTbd = !hasTeams || parts.length < 2;
+    const tname = isTbd
+      ? `<span class="bm-tname ko">${name}</span>`
+      : `<span class="bm-tname">${name}</span>`;
+    const sc = score !== null ? scoreWin(score, other) : '';
+    return `<div class="bm-team">${flag}${tname}${sc}</div>`;
+  }
+
+  const cls = ['bm', isLv ? 'lv' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+
+  return `<div class="${cls}" data-utc="${m.utc}">
+    <div class="bm-head">${statusHtml}${badgeHtml}</div>
+    <div class="bm-teams">
+      ${teamRow(ta, hs, as_)}
+      ${tb ? teamRow(tb, as_, hs) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
+    </div>
+  </div>`;
+}
+
+// ── Calcul des positions ──────────────────────────────────────────────────
+// Chaque round double la distance entre centres consécutifs
+function step(idx)        { return Math.pow(2, idx) * (CARD_H + PAIR_GAP); }
+function roundGap(idx)    { return step(idx) - CARD_H; }
+function firstCenter(idx) {
+  if (idx === 0) return CARD_H / 2;
+  return firstCenter(idx - 1) + step(idx - 1) / 2;
+}
+function topOffset(idx)   { return firstCenter(idx) - CARD_H / 2; }
+
+// ── Rendu du bracket ──────────────────────────────────────────────────────
+function render() {
+  const byRound = { r32: [], r16: [], qf: [], sf: [], third: [], final: [] };
+  MATCHES_KO.forEach(m => { if (byRound[m.g]) byRound[m.g].push(m); });
+
+  // Côté gauche : matchs 0..N/2, côté droit : N/2..N
+  const cols = [
+    { id: 'r32l', matches: byRound.r32.slice(0, 8),  idx: 0 },
+    { id: 'r16l', matches: byRound.r16.slice(0, 4),  idx: 1 },
+    { id: 'qfl',  matches: byRound.qf.slice(0, 2),   idx: 2 },
+    { id: 'sfl',  matches: byRound.sf.slice(0, 1),   idx: 3 },
+    { id: 'rf',   matches: byRound.final,             idx: 3 }, // aligné avec les demis
+    { id: 'sfr',  matches: byRound.sf.slice(1, 2),   idx: 3 },
+    { id: 'qfr',  matches: byRound.qf.slice(2, 4),   idx: 2 },
+    { id: 'r16r', matches: byRound.r16.slice(4, 8),  idx: 1 },
+    { id: 'r32r', matches: byRound.r32.slice(8, 16), idx: 0 },
+  ];
+
+  // Premier passage : injecter le HTML sans gaps pour mesurer CARD_H
+  cols.forEach(({ id, matches }) => {
+    const el = document.getElementById(id);
+    el.style.gap = '0';
+    el.style.paddingTop = '0';
+    el.innerHTML = matches.map(m => cardHtml(m)).join('');
+  });
+  document.getElementById('third-place').innerHTML =
+    byRound.third.map(m => cardHtml(m)).join('');
+
+  // Mesurer la hauteur réelle d'une carte
+  const sample = document.querySelector('#r32l .bm');
+  if (sample && sample.offsetHeight > 0) CARD_H = sample.offsetHeight;
+
+  // Deuxième passage : appliquer les gaps corrects
+  cols.forEach(({ id, idx }) => {
+    const el = document.getElementById(id);
+    el.style.gap        = roundGap(idx) + 'px';
+    el.style.paddingTop = topOffset(idx) + 'px';
+  });
+
+  document.getElementById('stime').textContent =
+    new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+  requestAnimationFrame(() => {
+    autoScale();
+    requestAnimationFrame(drawConnectors);
+  });
+}
+
+// ── Auto-scale pour tenir dans la fenêtre ─────────────────────────────────
+function autoScale() {
+  const bracket = document.getElementById('bracket');
+  const outer   = document.getElementById('bracket-outer');
+  bracket.style.transform = '';
+  currentScale = 1;
+
+  const availW = outer.clientWidth  - 24;
+  const availH = outer.clientHeight - 20;
+  const bW     = bracket.scrollWidth;
+  const bH     = bracket.scrollHeight;
+
+  currentScale = Math.min(availW / bW, availH / bH, 1.1);
+  bracket.style.transform = `scale(${currentScale})`;
+}
+
+// ── Connecteurs SVG ────────────────────────────────────────────────────────
+function drawConnectors() {
+  const bracket = document.getElementById('bracket');
+  const bRect   = bracket.getBoundingClientRect();
+  const s       = currentScale;
+  const svg     = document.getElementById('connectors');
+
+  svg.setAttribute('width',  bracket.scrollWidth);
+  svg.setAttribute('height', bracket.scrollHeight);
+
+  const lines = [];
+
+  function addPairs(fromId, toId, ratio, dir) {
+    const fromCards = [...document.getElementById(fromId).querySelectorAll('.bm')];
+    const toCards   = [...document.getElementById(toId).querySelectorAll('.bm')];
+    if (!fromCards.length || !toCards.length) return;
+
+    toCards.forEach((toCard, ti) => {
+      const tr    = toCard.getBoundingClientRect();
+      const toMidY = (tr.top + tr.height / 2 - bRect.top) / s;
+      const toX    = dir === 'ltr'
+        ? (tr.left  - bRect.left) / s
+        : (tr.right - bRect.left) / s;
+
+      const pairs = fromCards.slice(ti * ratio, ti * ratio + ratio);
+      if (!pairs.length) return;
+
+      const frs   = pairs.map(c => c.getBoundingClientRect());
+      const fromX = dir === 'ltr'
+        ? (frs[0].right - bRect.left) / s
+        : (frs[0].left  - bRect.left) / s;
+      const topY  = (frs[0].top + frs[0].height / 2 - bRect.top) / s;
+      const botY  = (frs[frs.length - 1].top + frs[frs.length - 1].height / 2 - bRect.top) / s;
+      const midX  = (fromX + toX) / 2;
+
+      frs.forEach(fr => {
+        const y = (fr.top + fr.height / 2 - bRect.top) / s;
+        lines.push(`<line x1="${fromX}" y1="${y}" x2="${midX}" y2="${y}"/>`);
+      });
+      if (frs.length > 1)
+        lines.push(`<line x1="${midX}" y1="${topY}" x2="${midX}" y2="${botY}"/>`);
+      lines.push(`<line x1="${midX}" y1="${toMidY}" x2="${toX}" y2="${toMidY}"/>`);
+    });
+  }
+
+  addPairs('r32l', 'r16l', 2, 'ltr');
+  addPairs('r16l', 'qfl',  2, 'ltr');
+  addPairs('qfl',  'sfl',  2, 'ltr');
+  addPairs('sfl',  'rf',   1, 'ltr');
+
+  addPairs('r32r', 'r16r', 2, 'rtl');
+  addPairs('r16r', 'qfr',  2, 'rtl');
+  addPairs('qfr',  'sfr',  2, 'rtl');
+  addPairs('sfr',  'rf',   1, 'rtl');
+
+  svg.innerHTML = `<g stroke="rgba(255,255,255,0.13)" stroke-width="1.5" fill="none">${lines.join('')}</g>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+async function refresh() {
+  await fetchScores();
+  updateFranceKoFlags();
+  render();
+  const hasLive = MATCHES_KO.some(m => {
+    const s = scoreMap[m.espnId];
+    return s && (s.st === 'live' || s.st === 'ht');
+  });
+  setTimeout(refresh, hasLive ? 30000 : 120000);
+}
+
+window.addEventListener('resize', () => {
+  autoScale();
+  requestAnimationFrame(drawConnectors);
+});
+
+updateFranceKoFlags();
+render();
+refresh();
+</script>
+</body>
+</html>
