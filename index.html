@@ -534,7 +534,9 @@ function computeStandings() {
   return { groups, h2h };
 }
 
-// Tri FIFA : pts > GD > GF global, puis confrontations directes, puis tirage (alpha)
+// Tri FIFA officiel WC 2026 (art. règlement)
+// 1. pts global ; 2-4. H2H pts/GD/GF ; 5. ré-applique H2H sur sous-groupe ;
+// 6. GD global ; 7. GF global ; 8. tirage (alpha)
 function fifaSort(rows, h2hMap) {
   function h2hFor(names) {
     const s = {};
@@ -550,26 +552,49 @@ function fifaSort(rows, h2hMap) {
     }
     return s;
   }
-  rows.sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+
+  // Résout un groupe à égalité de pts via H2H puis GD/GF global
+  function resolveGroup(group) {
+    if (group.length <= 1) return group;
+    const h = h2hFor(group.map(r => r.name));
+    group.sort((a, b) =>
+      (h[b.name].pts - h[a.name].pts) ||
+      (h[b.name].gd  - h[a.name].gd)  ||
+      (h[b.name].gf  - h[a.name].gf)
+    );
+    // Sous-groupes encore à égalité après H2H
+    const result = [];
+    let i = 0;
+    while (i < group.length) {
+      let j = i + 1;
+      while (j < group.length &&
+             h[group[j].name].pts === h[group[i].name].pts &&
+             h[group[j].name].gd  === h[group[i].name].gd  &&
+             h[group[j].name].gf  === h[group[i].name].gf) j++;
+      const sub = group.slice(i, j);
+      if (sub.length > 1 && sub.length < group.length) {
+        // Ré-applique H2H sur le sous-groupe réduit (règle FIFA)
+        result.push(...resolveGroup(sub));
+      } else if (sub.length > 1) {
+        // H2H ne départage pas → GD global, GF global, tirage (alpha)
+        sub.sort((a, b) => b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+        result.push(...sub);
+      } else {
+        result.push(...sub);
+      }
+      i = j;
+    }
+    return result;
+  }
+
+  // Trier par pts, puis résoudre les groupes à égalité
+  rows.sort((a, b) => b.pts - a.pts);
   const result = [];
   let i = 0;
   while (i < rows.length) {
     let j = i + 1;
-    while (j < rows.length &&
-           rows[j].pts === rows[i].pts &&
-           rows[j].gd  === rows[i].gd  &&
-           rows[j].gf  === rows[i].gf) j++;
-    const tied = rows.slice(i, j);
-    if (tied.length > 1) {
-      const h = h2hFor(tied.map(r => r.name));
-      tied.sort((a, b) =>
-        (h[b.name].pts - h[a.name].pts) ||
-        (h[b.name].gd  - h[a.name].gd)  ||
-        (h[b.name].gf  - h[a.name].gf)  ||
-        a.name.localeCompare(b.name)
-      );
-    }
-    result.push(...tied);
+    while (j < rows.length && rows[j].pts === rows[i].pts) j++;
+    result.push(...resolveGroup(rows.slice(i, j)));
     i = j;
   }
   return result;
