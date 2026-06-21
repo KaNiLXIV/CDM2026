@@ -262,6 +262,44 @@
 
   .empty  { text-align: center; padding: 3rem; color: var(--muted); font-size: 14px; }
 
+  /* ── Filtre groupe ── */
+  .gtable-head {
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .gtable-head:hover { background: rgba(74,222,128,0.14); }
+  .gtable.active-filter .gtable-head {
+    background: rgba(74,222,128,0.22);
+    color: var(--accent);
+    outline: 1px solid var(--accent);
+  }
+  .filter-bar {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+    padding: 6px 10px;
+    background: rgba(74,222,128,0.08);
+    border: 1px solid rgba(74,222,128,0.25);
+    border-radius: var(--r);
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .filter-bar.visible { display: flex; }
+  .filter-clear {
+    margin-left: auto;
+    background: none;
+    border: 1px solid rgba(74,222,128,0.35);
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .filter-clear:hover { background: rgba(74,222,128,0.15); }
+
   footer {
     flex-shrink: 0;
     text-align: center;
@@ -324,6 +362,10 @@
         <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Prochain match</div>
         <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
         <div class="legend-item"><span class="badge badge-m6">M6</span>En clair</div>
+      </div>
+      <div id="filter-bar" class="filter-bar">
+        <span id="filter-label"></span>
+        <button class="filter-clear" onclick="clearGroupFilter()">✕ Tous les matchs</button>
       </div>
       <div id="cal"></div>
     </div>
@@ -464,6 +506,7 @@ const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
 // ── State ──────────────────────────────────────────────────────────────────
 let scoreMap         = {};
 let lastStandingsSig = '';
+let activeGroupFilter = null;
 
 // ── ESPN ───────────────────────────────────────────────────────────────────
 async function fetchScores() {
@@ -655,6 +698,14 @@ function renderStandings() {
     html += `</tbody></table></div>`;
   });
   container.innerHTML = html || '<p class="empty">Aucune donnée disponible.</p>';
+  // Rendre les en-têtes de groupe cliquables
+  container.querySelectorAll('.gtable').forEach(el => {
+    const head = el.querySelector('.gtable-head');
+    if (!head) return;
+    const gname = head.textContent.trim();
+    if (activeGroupFilter === gname) el.classList.add('active-filter');
+    head.addEventListener('click', () => toggleGroupFilter(gname));
+  });
 }
 
 // ── Logique temporelle ─────────────────────────────────────────────────────
@@ -721,13 +772,42 @@ function channelBadge(m) {
   return '';
 }
 
+// ── Filtre groupe ──────────────────────────────────────────────────────────
+function toggleGroupFilter(gname) {
+  activeGroupFilter = activeGroupFilter === gname ? null : gname;
+  lastStandingsSig = ''; // force re-render standings pour mettre à jour l'highlight
+  renderStandings();
+  render();
+  const bar   = document.getElementById('filter-bar');
+  const label = document.getElementById('filter-label');
+  if (activeGroupFilter) {
+    label.textContent = `Filtre : ${activeGroupFilter}`;
+    bar.classList.add('visible');
+    document.querySelector('.matches-body').scrollTop = 0;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function clearGroupFilter() {
+  activeGroupFilter = null;
+  lastStandingsSig = '';
+  renderStandings();
+  render();
+  document.getElementById('filter-bar').classList.remove('visible');
+}
+
 function render() {
   const cal  = document.getElementById('cal');
   const next = nextMatchUtc();
   if (!MATCHES.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
 
+  const matches = activeGroupFilter
+    ? MATCHES.filter(x => x.g === activeGroupFilter)
+    : MATCHES;
+
   let html = '', lastDay = '', lastPhase = '';
-  MATCHES.forEach(x => {
+  matches.forEach(x => {
     const day   = dayLabel(x.utc);
     const phase = x.ph === 'ko' ? (KO_PHASES.find(p => x.g.startsWith(p)) || x.g) : '';
 
