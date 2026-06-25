@@ -378,17 +378,28 @@ async function fetchScores() {
     (data.events || []).forEach(ev => {
       const comp = ev.competitions?.[0];
       if (!comp) return;
-      const sn   = comp.status?.type?.name || '';
-      const isLv = sn === 'STATUS_IN_PROGRESS';
-      const isHT = sn === 'STATUS_HALFTIME';
-      const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const sn     = comp.status?.type?.name || '';
+      const period = comp.status?.period || 0;
+      const detail = (comp.status?.type?.shortDetail || '').toLowerCase();
+      const isLv   = sn === 'STATUS_IN_PROGRESS';
+      const isHT   = sn === 'STATUS_HALFTIME';
+      const isEOP  = sn === 'STATUS_END_OF_PERIOD';
+      const isTAB  = sn === 'STATUS_SHOOTOUT';
+      const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const isET   = isLv && period >= 3;
       const home = comp.competitors?.find(c => c.homeAway === 'home');
       const away = comp.competitors?.find(c => c.homeAway === 'away');
+      let extra = null;
+      if (isFT) {
+        if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
+        else if (detail.includes('aet') || detail.includes('et') || period > 2) extra = 'aet';
+      }
       newMap[ev.id] = {
         hs:    home?.score ?? null,
         as:    away?.score ?? null,
-        st:    isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
-        min:   isHT ? 'MT' : (comp.status?.displayClock || ''),
+        st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:   isHT ? 'MT' : isEOP ? 'MT p.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        extra,
         hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
         aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
       };
@@ -431,7 +442,7 @@ function matchState(m) {
 function cardHtml(m) {
   const s    = scoreMap[m.espnId];
   const st   = matchState(m);
-  const isLv = st === 'live' || st === 'ht';
+  const isLv = st === 'live' || st === 'ht' || st === 'et' || st === 'et_ht' || st === 'tab';
   const isFT = st === 'ft';
 
   const parts    = m.m.split(' - ');
@@ -451,10 +462,12 @@ function cardHtml(m) {
   let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${timeLabel(m.utc)}</span>`;
   let badgeHtml  = '';
   if (isLv) {
-    const min = s?.min || (st === 'ht' ? 'MT' : '');
+    const min = s?.min || (st === 'ht' ? 'MT' : st === 'et_ht' ? 'MT p.' : st === 'tab' ? 'TAB' : '');
     statusHtml = `<span class="bm-status-live">⬤ ${min || 'LIVE'}</span>`;
   } else if (isFT) {
-    badgeHtml = `<span class="bm-status-ft">FT</span>`;
+    const extra = s?.extra;
+    const ftLabel = extra === 'tab' ? 'TAB' : extra === 'aet' ? 'AP' : 'FT';
+    badgeHtml = `<span class="bm-status-ft">${ftLabel}</span>`;
   }
   if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
 
@@ -470,7 +483,7 @@ function cardHtml(m) {
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
-  const cls = ['bm', isLv ? 'lv' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+  const cls = ['bm', isLv ? 'lv' : isFT ? 'done' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
 
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
