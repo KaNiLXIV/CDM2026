@@ -397,8 +397,9 @@ async function fetchScores() {
       newMap[ev.id] = {
         hs:    home?.score ?? null,
         as:    away?.score ?? null,
-        st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
-        min:   isHT ? 'MT' : isEOP ? 'MT p.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        st:     isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:    isHT ? 'MT' : isEOP ? 'MT p.sup.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        period,
         extra,
         hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
         aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
@@ -462,8 +463,13 @@ function cardHtml(m) {
   let statusHtml = `<span class="bm-date">${dayLabel(m.utc)} · ${timeLabel(m.utc)}</span>`;
   let badgeHtml  = '';
   if (isLv) {
-    const min = s?.min || (st === 'ht' ? 'MT' : st === 'et_ht' ? 'MT p.' : st === 'tab' ? 'TAB' : '');
-    statusHtml = `<span class="bm-status-live">⬤ ${min || 'LIVE'}</span>`;
+    let lv;
+    if (st === 'ht')         lv = 'MT';
+    else if (st === 'et_ht') lv = 'MT p.sup.';
+    else if (st === 'tab')   lv = 'TAB';
+    else if (st === 'et')    lv = (s?.period >= 4 ? '2ᵉ p.sup.' : '1ʳᵉ p.sup.') + (s?.min ? ` · ${s.min}` : '');
+    else                     lv = ((s?.period === 2 ? '2ᵉ MT' : '1ʳᵉ MT') + (s?.min ? ` · ${s.min}` : ''));
+    statusHtml = `<span class="bm-status-live">⬤ ${lv || 'LIVE'}</span>`;
   } else if (isFT) {
     const extra = s?.extra;
     const ftLabel = extra === 'tab' ? 'TAB' : extra === 'aet' ? 'AP' : 'FT';

@@ -536,8 +536,9 @@ async function fetchScores() {
       newMap[ev.id] = {
         hs:    home?.score ?? null,
         as:    away?.score ?? null,
-        st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
-        min:   isHT ? 'MT' : isEOP ? 'MT p.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        st:     isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:    isHT ? 'MT' : isEOP ? 'MT p.sup.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        period,
         extra,
         hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
         aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
@@ -728,15 +729,26 @@ function matchState(m) {
   return 'sched';
 }
 
+function periodLabel(st, period) {
+  if (st === 'ht')    return 'MT';
+  if (st === 'et_ht') return 'MT p.sup.';
+  if (st === 'tab')   return 'TAB';
+  if (st === 'et')    return period >= 4 ? '2ᵉ p.sup.' : '1ʳᵉ p.sup.';
+  return period === 2 ? '2ᵉ MT' : '1ʳᵉ MT';
+}
+
 function liveLabel(m) {
   const s = scoreMap[m.espnId];
   if (s && s.st !== 'sched' && s.st !== 'ft') {
-    if (s.min) return s.min;
+    const pl = periodLabel(s.st, s.period || 0);
+    if (s.st === 'ht' || s.st === 'et_ht' || s.st === 'tab') return pl;
+    return s.min ? `${pl} · ${s.min}` : pl;
   }
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 46 && elapsed < 62) return 'MT';
+  const pl = elapsed >= 45 ? '2ᵉ MT' : '1ʳᵉ MT';
   const cap = elapsed > 95 ? 120 : 90;
-  return `${Math.min(elapsed, cap)}'`;
+  return `${pl} · ${Math.min(elapsed, cap)}'`;
 }
 
 function scoreLabel(m) {
