@@ -828,10 +828,10 @@ function clearGroupFilter() {
 }
 
 function render() {
-  const hasLiveNow = MATCHES.some(x => SCORE_STATES.has(matchState(x)) && matchState(x) !== 'ft');
+  const hasLiveNow = MATCHES.some(x => { const st = matchState(x); return st !== 'ft' && SCORE_STATES.has(st); });
   const renderSig  = hasLiveNow ? null : JSON.stringify(scoreMap) + '|' + (activeGroupFilter || '');
-  if (renderSig && renderSig === lastRenderSig) return;
-  lastRenderSig = renderSig || '';
+  if (renderSig !== null && renderSig === lastRenderSig) return;
+  lastRenderSig = renderSig ?? '';
 
   const cal  = document.getElementById('cal');
   const next = nextMatchUtc();
