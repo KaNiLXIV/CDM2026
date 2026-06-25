@@ -727,6 +727,9 @@ function renderStandings() {
 function matchState(m) {
   const s = scoreMap[m.espnId];
   if (s && s.st !== 'sched') return s.st;
+  // Si ESPN connaît le match (même avec st='sched'), ne pas déduire 'ft' localement
+  // pour éviter de marquer terminé pendant les arrêts de jeu
+  if (s) return 'live';
   const now     = Date.now();
   const ko      = new Date(m.utc).getTime();
   const dur     = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
