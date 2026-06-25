@@ -121,8 +121,14 @@
     font-weight: 500;
     text-transform: capitalize;
   }
-  #fcard {
+  #fcards {
     display: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .fcard {
+    display: flex;
     align-items: center;
     gap: 10px;
     background: var(--surf2);
@@ -135,15 +141,15 @@
     color: var(--text);
     line-height: 1;
   }
-  #fcard:hover { border-color: var(--accent); background: #162a1a; }
-  #fcard.is-live { border-color: var(--lv-bd); }
-  #fcard.is-live:hover { border-color: var(--lv-c); }
-  #fcard.is-fr  { border-color: var(--fr-bd); }
+  .fcard:hover { border-color: var(--accent); background: #162a1a; }
+  .fcard.is-live { border-color: var(--lv-bd); }
+  .fcard.is-live:hover { border-color: var(--lv-c); }
+  .fcard.is-fr  { border-color: var(--fr-bd); }
   .fc-left   { display: flex; flex-direction: column; gap: 3px; align-items: center; border-right: 1px solid var(--bd2); padding-right: 12px; }
   .fc-status { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
   .fc-timer  { font-size: 13px; font-weight: 700; color: var(--muted); }
-  #fcard.is-live .fc-status { color: var(--lv-c); }
-  #fcard.is-live .fc-timer  { color: var(--lv-c); }
+  .fcard.is-live .fc-status { color: var(--lv-c); }
+  .fcard.is-live .fc-timer  { color: var(--lv-c); }
   .fc-teams { font-weight: 600; display: flex; align-items: center; gap: 10px; font-size: 17px; }
   .fc-teams .fi { font-size: 1.3em; border-radius: 3px; }
   .fc-teams .score-mid { font-size: 15px; padding: 2px 9px; }
@@ -337,7 +343,7 @@
         <div id="fcard-date"></div>
         <span id="stime-wrap"></span>
       </div>
-      <div id="fcard" onclick="jumpToActive()" role="button" tabindex="0"></div>
+      <div id="fcards"></div>
     </div>
   </header>
 
@@ -857,56 +863,65 @@ function render() {
 }
 
 // ── Focus card ─────────────────────────────────────────────────────────────
-function updateStatusBar(next) {
-  const hm     = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  const card   = document.getElementById('fcard');
-  const dateEl = document.getElementById('fcard-date');
-  const live   = MATCHES.filter(x => ['live','ht','et','et_ht','tab'].includes(matchState(x)));
-  const focus  = live[0] || MATCHES.find(x => x.utc === next);
-
-  document.getElementById('stime-wrap').textContent = hm;
-
-  if (!focus) {
-    card.style.display = 'none';
-    dateEl.style.display = 'none';
-    return;
-  }
-
-  dateEl.textContent = new Date(focus.utc).toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris'
-  });
-  dateEl.style.display = 'block';
-
-  const isLive  = live.length > 0;
-  const s       = scoreMap[focus.espnId];
-
+function buildFocusCard(m, isLive) {
+  const s = scoreMap[m.espnId];
   let statusHtml, timerHtml, fcScore = '';
   if (isLive) {
-    const pl = s ? periodLabel(s.st, s.period || 0) : (liveLabel(focus).split(' · ')[0]);
+    const pl = s ? periodLabel(s.st, s.period || 0) : (liveLabel(m).split(' · ')[0]);
     const mn = s ? s.min : '';
     statusHtml = `⬤ ${pl}`;
     if (s && s.hs !== null) fcScore = `${s.hs}-${s.as}`;
     timerHtml = mn || '';
   } else {
     statusHtml = '▶ Prochain';
-    timerHtml = timeLabel(focus.utc);
+    timerHtml = timeLabel(m.utc);
   }
-
-  card.className = isLive ? 'is-live' + (focus.fr ? ' is-fr' : '') : (focus.fr ? 'is-fr' : '');
-  card.style.display = 'flex';
-  card.innerHTML = `
+  const cls = 'fcard' + (isLive ? ' is-live' : '') + (m.fr ? ' is-fr' : '');
+  return `<div class="${cls}" onclick="jumpToMatch('${m.espnId}')" role="button" tabindex="0">
     <div class="fc-left">
       <span class="fc-status">${statusHtml}</span>
       <span class="fc-timer">${timerHtml}</span>
     </div>
-    <div class="fc-teams">${matchHtml(focus.m, fcScore)}</div>
-  `;
+    <div class="fc-teams">${matchHtml(m.m, fcScore)}</div>
+  </div>`;
+}
+
+function updateStatusBar(next) {
+  const hm      = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const wrap    = document.getElementById('fcards');
+  const dateEl  = document.getElementById('fcard-date');
+  const live    = MATCHES.filter(x => ['live','ht','et','et_ht','tab'].includes(matchState(x)));
+  const isLive  = live.length > 0;
+
+  document.getElementById('stime-wrap').textContent = hm;
+
+  let focuses;
+  if (isLive) {
+    focuses = live;
+  } else {
+    focuses = next ? MATCHES.filter(x => x.utc === next) : [];
+  }
+
+  if (!focuses.length) {
+    wrap.style.display = 'none';
+    dateEl.style.display = 'none';
+    return;
+  }
+
+  dateEl.textContent = new Date(focuses[0].utc).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris'
+  });
+  dateEl.style.display = 'block';
+
+  wrap.style.display = 'flex';
+  wrap.innerHTML = focuses.map(m => buildFocusCard(m, isLive)).join('');
 }
 
 // ── Jump vers le match actif ───────────────────────────────────────────────
-function jumpToActive() {
+function jumpToMatch(espnId) {
   const next   = nextMatchUtc();
-  const target = MATCHES.find(x => { const s = matchState(x); return s === 'live' || s === 'ht'; })
+  const target = MATCHES.find(x => x.espnId === espnId)
+               || MATCHES.find(x => { const s = matchState(x); return s === 'live' || s === 'ht'; })
                || MATCHES.find(x => x.utc === next);
   if (!target) return;
 
