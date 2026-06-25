@@ -730,8 +730,9 @@ function liveLabel(m) {
 
 function scoreLabel(m) {
   const s = scoreMap[m.espnId];
-  if (!s || s.hs === null) return '';
-  if (s.st === 'ft' || s.st === 'live' || s.st === 'ht') return `${s.hs}-${s.as}`;
+  if (!s || s.hs === null || s.hs === '') return '';
+  const st = matchState(m);
+  if (st === 'ft' || st === 'live' || st === 'ht') return `${s.hs}–${s.as}`;
   return '';
 }
 

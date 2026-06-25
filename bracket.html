@@ -439,7 +439,7 @@ function cardHtml(m) {
   const [ta, tb] = hasTeams ? parts : [m.m, null];
 
   let hs = null, as_ = null;
-  if (s && s.hs !== null && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
+  if (s && s.hs !== null && s.hs !== '' && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
 
   const scoreWin = (score, other) => {
     if (score === null) return '';
