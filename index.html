@@ -882,10 +882,9 @@ function updateStatusBar(next) {
 
   let statusHtml, timerHtml, fcScore = '';
   if (isLive) {
-    const count = live.length;
-    statusHtml = count > 1 ? `⬤ ${count}` : '⬤';
+    statusHtml = `⬤ ${liveLabel(focus)}`;
     if (s && s.hs !== null) fcScore = `${s.hs}-${s.as}`;
-    timerHtml = liveLabel(focus);
+    timerHtml = '';
   } else {
     statusHtml = '▶ Prochain';
     timerHtml = timeLabel(focus.utc);
