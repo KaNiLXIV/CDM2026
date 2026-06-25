@@ -531,7 +531,7 @@ async function fetchScores() {
       let extra = null;
       if (isFT) {
         if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
-        else if (detail.includes('aet') || detail.includes('et') || period > 2) extra = 'aet';
+        else if (detail === 'aet' || period > 2) extra = 'aet';
       }
       newMap[ev.id] = {
         hs:    home?.score ?? null,
@@ -735,7 +735,8 @@ function liveLabel(m) {
   }
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 46 && elapsed < 62) return 'MT';
-  return `${Math.min(elapsed, 90)}'`;
+  const cap = elapsed > 95 ? 120 : 90;
+  return `${Math.min(elapsed, cap)}'`;
 }
 
 function scoreLabel(m) {

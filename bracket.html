@@ -392,7 +392,7 @@ async function fetchScores() {
       let extra = null;
       if (isFT) {
         if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
-        else if (detail.includes('aet') || detail.includes('et') || period > 2) extra = 'aet';
+        else if (detail === 'aet' || period > 2) extra = 'aet';
       }
       newMap[ev.id] = {
         hs:    home?.score ?? null,
@@ -483,7 +483,7 @@ function cardHtml(m) {
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
-  const cls = ['bm', isLv ? 'lv' : isFT ? 'done' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+  const cls = ['bm', isLv ? 'lv' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
 
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
