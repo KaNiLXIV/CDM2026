@@ -165,7 +165,7 @@
     flex-shrink: 0;
   }
   .bm:hover { border-color: var(--bd3); background: var(--surf2); }
-  .bm.fr  { border-color: var(--fr-bd); background: var(--fr-bg); }
+
   .bm.lv  { border-color: var(--lv-bd); }
   .bm.fn  { border-color: var(--gold); background: rgba(251,191,36,0.05); }
 
@@ -211,7 +211,6 @@
   .bm-tscore.win { color: var(--text); }
   .bm-tscore.lv  { color: var(--lv-c); }
 
-  .bm.fr .bm-tname { color: #c8d8ff; }
 
   /* Petite finale sous la finale dans la colonne centrale */
   .third-place-sep {
@@ -252,7 +251,7 @@
 
   <div class="legend-bar">
     <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
+
     <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Finale</div>
   </div>
 
@@ -415,20 +414,6 @@ async function fetchScores() {
   } catch { return false; }
 }
 
-// ── Position France (lue depuis localStorage, écrite par index.html) ───────
-function updateFranceKoFlags() {
-  let pos = null;
-  try { pos = localStorage.getItem('cdm_fr_pos'); } catch {}
-  const qualified = pos === '1I' || pos === '2I';
-  const eliminated = pos !== null && pos !== '' && !qualified;
-  MATCHES_KO.forEach(m => {
-    if (!m.frIf) return;
-    if (qualified)       { m.fr = m.frIf.includes(pos) ? 1 : 0; }
-    else if (eliminated) { m.fr = 0; }
-    else                 { m.fr = m.frIf.some(f => f === '1I' || f === '2I') ? 1 : 0; }
-  });
-}
-
 // ── Logique temporelle ────────────────────────────────────────────────────
 function matchState(m) {
   const s = scoreMap[m.espnId];
@@ -489,7 +474,7 @@ function cardHtml(m) {
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
-  const cls = ['bm', isLv ? 'lv' : '', m.fr ? 'fr' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+  const cls = ['bm', isLv ? 'lv' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
 
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
@@ -635,7 +620,7 @@ function drawConnectors() {
 // ── Init ──────────────────────────────────────────────────────────────────
 async function refresh() {
   await fetchScores();
-  updateFranceKoFlags();
+
   render();
   const hasLive = MATCHES_KO.some(m => {
     const s = scoreMap[m.espnId];
