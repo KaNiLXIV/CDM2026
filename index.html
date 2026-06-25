@@ -512,6 +512,7 @@ const KO_PHASES  = ['16e','8e','Quart','Demi','Petite','Finale'];
 // ── State ──────────────────────────────────────────────────────────────────
 let scoreMap         = {};
 let lastStandingsSig = '';
+let lastRenderSig    = '';
 let activeGroupFilter = null;
 
 // ── ESPN ───────────────────────────────────────────────────────────────────
@@ -758,12 +759,17 @@ function liveLabel(m) {
   return `${pl} · ${Math.min(gameMin, cap)}'`;
 }
 
+const SCORE_STATES = new Set(['ft','live','ht','et','et_ht','tab']);
+
 function scoreLabel(m) {
   const s = scoreMap[m.espnId];
   if (!s || s.hs === null || s.hs === '') return '';
-  const st = matchState(m);
-  if (st === 'ft' || st === 'live' || st === 'ht') return `${s.hs}–${s.as}`;
+  if (SCORE_STATES.has(matchState(m))) return `${s.hs}–${s.as}`;
   return '';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function nextMatchUtc() {
@@ -822,6 +828,11 @@ function clearGroupFilter() {
 }
 
 function render() {
+  const hasLiveNow = MATCHES.some(x => { const st = matchState(x); return st !== 'ft' && SCORE_STATES.has(st); });
+  const renderSig  = hasLiveNow ? null : JSON.stringify(scoreMap) + '|' + (activeGroupFilter || '');
+  if (renderSig !== null && renderSig === lastRenderSig) return;
+  lastRenderSig = renderSig ?? '';
+
   const cal  = document.getElementById('cal');
   const next = nextMatchUtc();
   if (!MATCHES.length) { cal.innerHTML = '<p class="empty">Aucun match.</p>'; return; }
@@ -852,7 +863,7 @@ function render() {
       <div class="match-info">
         <div class="teams">${matchHtml(x.m, score)}</div>
         <div class="group">${x.g}</div>
-        ${scoreMap[x.espnId]?.venue ? `<div class="venue">${scoreMap[x.espnId].venue}</div>` : ''}
+        ${scoreMap[x.espnId]?.venue ? `<div class="venue">${escHtml(scoreMap[x.espnId].venue)}</div>` : ''}
       </div>
       ${channelBadge(x)}
     </div>`;

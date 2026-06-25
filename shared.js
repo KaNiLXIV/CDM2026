@@ -46,20 +46,22 @@ const MONTHS     = ['jan.','fév.','mars','avr.','mai','juin','juil.','août','s
 const ESPN_URL   = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719';
 
 // ── Utilitaires ───────────────────────────────────────────────────────────
+const _fmtDate = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+});
+const _fmtTime = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false,
+});
+
 function dayLabel(utc) {
-  // Use en-CA (YYYY-MM-DD) to avoid the fragile toLocaleString→new Date() round-trip
-  const ymd = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date(utc));
+  const ymd = _fmtDate.format(new Date(utc));
   const [year, month, day] = ymd.split('-').map(Number);
   const ref = new Date(Date.UTC(year, month - 1, day));
   return `${DAYS[ref.getUTCDay()]} ${day} ${MONTHS[month - 1]}`;
 }
 
 function timeLabel(utc) {
-  return new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false,
-  }).format(new Date(utc));
+  return _fmtTime.format(new Date(utc));
 }
 
 // ── Fetch ESPN avec cache localStorage (TTL 20 s) ─────────────────────────

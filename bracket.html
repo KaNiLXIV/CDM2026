@@ -627,9 +627,13 @@ async function refresh() {
   setTimeout(refresh, hasLive ? 30000 : 120000);
 }
 
+let _resizeTimer;
 window.addEventListener('resize', () => {
-  autoScale();
-  requestAnimationFrame(drawConnectors);
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    autoScale();
+    requestAnimationFrame(drawConnectors);
+  }, 100);
 });
 
 render();
