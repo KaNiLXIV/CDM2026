@@ -754,7 +754,7 @@ function liveLabel(m) {
   if (elapsed >= 46 && elapsed < 62) return 'MT';
   const gameMin = elapsed >= 62 ? elapsed - 16 : elapsed;
   const pl = gameMin >= 45 ? '2ᵉ MT' : '1ʳᵉ MT';
-  const cap = gameMin > 95 ? 120 : 90;
+  const cap = m.ph === 'ko' ? 120 : 90;
   return `${pl} · ${Math.min(gameMin, cap)}'`;
 }
 
