@@ -752,9 +752,10 @@ function liveLabel(m) {
   }
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
   if (elapsed >= 46 && elapsed < 62) return 'MT';
-  const pl = elapsed >= 45 ? '2ᵉ MT' : '1ʳᵉ MT';
-  const cap = elapsed > 95 ? 120 : 90;
-  return `${pl} · ${Math.min(elapsed, cap)}'`;
+  const gameMin = elapsed >= 62 ? elapsed - 16 : elapsed;
+  const pl = gameMin >= 45 ? '2ᵉ MT' : '1ʳᵉ MT';
+  const cap = m.ph === 'ko' ? 120 : 90;
+  return `${pl} · ${Math.min(gameMin, cap)}'`;
 }
 
 function scoreLabel(m) {
