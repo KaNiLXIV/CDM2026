@@ -517,17 +517,28 @@ async function fetchScores() {
     (data.events || []).forEach(ev => {
       const comp = ev.competitions?.[0];
       if (!comp) return;
-      const sn   = comp.status?.type?.name || '';
-      const isLv = sn === 'STATUS_IN_PROGRESS';
-      const isHT = sn === 'STATUS_HALFTIME';
-      const isFT = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const sn     = comp.status?.type?.name || '';
+      const period = comp.status?.period || 0;
+      const detail = (comp.status?.type?.shortDetail || '').toLowerCase();
+      const isLv   = sn === 'STATUS_IN_PROGRESS';
+      const isHT   = sn === 'STATUS_HALFTIME';
+      const isEOP  = sn === 'STATUS_END_OF_PERIOD';
+      const isTAB  = sn === 'STATUS_SHOOTOUT';
+      const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+      const isET   = isLv && period >= 3;
       const home = comp.competitors?.find(c => c.homeAway === 'home');
       const away = comp.competitors?.find(c => c.homeAway === 'away');
+      let extra = null;
+      if (isFT) {
+        if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
+        else if (detail === 'aet' || period > 2) extra = 'aet';
+      }
       newMap[ev.id] = {
         hs:    home?.score ?? null,
         as:    away?.score ?? null,
-        st:    isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
-        min:   isHT ? 'MT' : (comp.status?.displayClock || ''),
+        st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+        min:   isHT ? 'MT' : isEOP ? 'MT p.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+        extra,
         hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
         aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
         venue: comp.venue?.fullName || '',
@@ -719,13 +730,13 @@ function matchState(m) {
 
 function liveLabel(m) {
   const s = scoreMap[m.espnId];
-  if (s && (s.st === 'live' || s.st === 'ht')) {
-    if (s.st === 'ht') return 'Mi-temps';
+  if (s && s.st !== 'sched' && s.st !== 'ft') {
     if (s.min) return s.min;
   }
   const elapsed = Math.floor((Date.now() - new Date(m.utc).getTime()) / 60000);
-  if (elapsed >= 46 && elapsed < 62) return 'Mi-temps';
-  return elapsed < 46 ? '1ère mi-temps' : '2ème mi-temps';
+  if (elapsed >= 46 && elapsed < 62) return 'MT';
+  const cap = elapsed > 95 ? 120 : 90;
+  return `${Math.min(elapsed, cap)}'`;
 }
 
 function scoreLabel(m) {
@@ -746,7 +757,7 @@ function nextMatchUtc() {
 
 // ── Rendu ──────────────────────────────────────────────────────────────────
 function rowClass(st, m, next) {
-  if (st === 'live' || st === 'ht') return 'row lv';
+  if (st === 'live' || st === 'ht' || st === 'et' || st === 'et_ht' || st === 'tab') return 'row lv';
   if (m.fr)           return 'row fr';
   if (m.utc === next) return 'row nx';
   if (m.final)        return 'row fn';
@@ -754,7 +765,7 @@ function rowClass(st, m, next) {
 }
 
 function timeCell(st, m, next) {
-  const isLive = st === 'live' || st === 'ht';
+  const isLive = st === 'live' || st === 'ht' || st === 'et' || st === 'et_ht' || st === 'tab';
   const isNext = !isLive && m.utc === next;
   const label  = isLive ? liveLabel(m) : '';
   const sub = isLive
@@ -838,7 +849,7 @@ function updateStatusBar(next) {
   const hm     = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const card   = document.getElementById('fcard');
   const dateEl = document.getElementById('fcard-date');
-  const live   = MATCHES.filter(x => matchState(x) === 'live' || matchState(x) === 'ht');
+  const live   = MATCHES.filter(x => ['live','ht','et','et_ht','tab'].includes(matchState(x)));
   const focus  = live[0] || MATCHES.find(x => x.utc === next);
 
   document.getElementById('stime-wrap').textContent = hm;
@@ -860,9 +871,9 @@ function updateStatusBar(next) {
   let statusHtml, timerHtml, fcScore = '';
   if (isLive) {
     const count = live.length;
-    statusHtml = `⬤ ${count > 1 ? count + ' en cours' : 'En cours'}`;
+    statusHtml = count > 1 ? `⬤ ${count}` : '⬤';
     if (s && s.hs !== null) fcScore = `${s.hs}-${s.as}`;
-    timerHtml = s?.min || (s?.st === 'ht' ? 'Mi-temps' : '');
+    timerHtml = liveLabel(focus);
   } else {
     statusHtml = '▶ Prochain';
     timerHtml = timeLabel(focus.utc);
