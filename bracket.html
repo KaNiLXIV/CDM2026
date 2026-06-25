@@ -416,10 +416,10 @@ async function fetchScores() {
 function matchState(m) {
   const s = scoreMap[m.espnId];
   if (s && s.st !== 'sched') return s.st;
-  // Si ESPN connaît le match (même avec st='sched'), ne pas déduire 'ft' localement
-  // pour éviter de marquer terminé pendant les arrêts de jeu
-  if (s) return 'live';
   const elapsed = Date.now() - new Date(m.utc).getTime();
+  // Si ESPN connaît le match et qu'il aurait dû commencer, lui faire confiance
+  // plutôt que de déduire 'ft' — évite de marquer terminé pendant les arrêts de jeu
+  if (s && elapsed >= 0) return 'live';
   if (elapsed >= 0 && elapsed < DUR_KO) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
   if (elapsed >= DUR_KO) return 'ft';
   return 'sched';
