@@ -731,6 +731,9 @@ function matchState(m) {
   const ko      = new Date(m.utc).getTime();
   const dur     = m.ph === 'ko' ? DUR_KO : DUR_GROUP;
   const elapsed = now - ko;
+  // Si ESPN connaît le match et qu'il aurait dû commencer, lui faire confiance
+  // plutôt que de déduire 'ft' — évite de marquer terminé pendant les arrêts de jeu
+  if (s && elapsed >= 0) return 'live';
   if (elapsed >= 0 && elapsed < dur) return elapsed >= 46*60000 && elapsed < 62*60000 ? 'ht' : 'live';
   if (elapsed >= dur)                return 'ft';
   return 'sched';
