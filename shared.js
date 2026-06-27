@@ -64,6 +64,44 @@ function timeLabel(utc) {
   return _fmtTime.format(new Date(utc));
 }
 
+// ── Parsing ESPN → scoreMap ───────────────────────────────────────────────
+function parseEspnScores(data, opts = {}) {
+  const newMap = {};
+  (data.events || []).forEach(ev => {
+    const comp = ev.competitions?.[0];
+    if (!comp) return;
+    const sn     = comp.status?.type?.name || '';
+    const period = comp.status?.period || 0;
+    const detail = (comp.status?.type?.shortDetail || '').toLowerCase();
+    const isLv   = sn === 'STATUS_IN_PROGRESS';
+    const isHT   = sn === 'STATUS_HALFTIME';
+    const isEOP  = sn === 'STATUS_END_OF_PERIOD';
+    const isTAB  = sn === 'STATUS_SHOOTOUT';
+    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+    const isET   = isLv && period >= 3;
+    const home = comp.competitors?.find(c => c.homeAway === 'home');
+    const away = comp.competitors?.find(c => c.homeAway === 'away');
+    let extra = null;
+    if (isFT) {
+      if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
+      else if (detail === 'aet' || period > 2) extra = 'aet';
+    }
+    const entry = {
+      hs:    home?.score ?? null,
+      as:    away?.score ?? null,
+      st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
+      min:   isHT ? 'MT' : isEOP ? 'MT p.sup.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
+      period,
+      extra,
+      hname: TEAM_EN_FR[home?.team?.displayName] || home?.team?.shortDisplayName,
+      aname: TEAM_EN_FR[away?.team?.displayName] || away?.team?.shortDisplayName,
+    };
+    if (opts.includeVenue) entry.venue = comp.venue?.fullName || '';
+    newMap[ev.id] = entry;
+  });
+  return newMap;
+}
+
 // ── Fetch ESPN avec cache localStorage (TTL 20 s) ─────────────────────────
 async function fetchEspnData() {
   const KEY = 'cdm_espn';
