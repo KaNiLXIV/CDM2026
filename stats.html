@@ -376,22 +376,20 @@ function buildStats(data) {
       teamNames[c.team.id] = c.team.displayName;
     }
 
-    // Accumulate team stats for finished matches
-    if (isDone && comp.competitors?.length === 2) {
-      const [t0, t1] = comp.competitors;
-      for (const c of [t0, t1]) {
-        if (!teamSt[c.team.id]) {
-          teamSt[c.team.id] = { nameEn: c.team.displayName, played: 0, gf: 0, ga: 0, yellow: 0, red: 0 };
-        }
-        teamSt[c.team.id].played++;
-        teamSt[c.team.id].gf += parseInt(c.score || 0, 10);
-      }
-      // goals against = opponent's score
-      teamSt[t0.team.id].ga += parseInt(t1.score || 0, 10);
-      teamSt[t1.team.id].ga += parseInt(t0.score || 0, 10);
-    }
+    // Only accumulate stats for finished matches
+    if (!isDone || comp.competitors?.length !== 2) continue;
 
-    // Parse events details: goals + cards
+    const [t0, t1] = comp.competitors;
+    for (const c of [t0, t1]) {
+      if (!teamSt[c.team.id]) {
+        teamSt[c.team.id] = { nameEn: c.team.displayName, played: 0, gf: 0, ga: 0, yellow: 0, red: 0 };
+      }
+      teamSt[c.team.id].played++;
+      teamSt[c.team.id].gf += parseInt(c.score || 0, 10);
+    }
+    teamSt[t0.team.id].ga += parseInt(t1.score || 0, 10);
+    teamSt[t1.team.id].ga += parseInt(t0.score || 0, 10);
+
     for (const det of (comp.details || [])) {
       const athletes = det.athletesInvolved || [];
       if (!athletes.length) continue;
@@ -603,7 +601,9 @@ function loadAssistsCache() {
     if (raw && raw.processed && raw.assists) {
       return { processed: new Set(raw.processed), assists: raw.assists };
     }
-  } catch {}
+  } catch {
+    localStorage.removeItem(ASSISTS_KEY);
+  }
   return { processed: new Set(), assists: {} };
 }
 
@@ -658,9 +658,8 @@ async function buildAssistsFromSummaries(finishedEventIds) {
     const results = await Promise.all(batch.map(id => fetchSummary(id)));
 
     results.forEach((summary, j) => {
-      if (!summary) return;
-      parseSummaryAssists(summary, assists);
-      processed.add(batch[j]);
+      if (summary) parseSummaryAssists(summary, assists);
+      processed.add(batch[j]); // mark done even on failure to avoid infinite retry
     });
 
     // Save after each batch so progress is never lost
