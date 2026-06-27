@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stats — Coupe du Monde 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css">
+<style>
+  :root {
+    --bg:      #0c1810;
+    --surface: #122016;
+    --surf2:   #1a2e1e;
+    --bd:      rgba(255,255,255,0.06);
+    --bd2:     rgba(255,255,255,0.11);
+    --text:    #ecfdf5;
+    --muted:   #4d7a55;
+    --accent:  #4ade80;
+    --gold:    #fbbf24;
+    --lv-c:    #f87171;
+    --r:       8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--bd2);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  header h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  header .nav-links {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+  }
+
+  header a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 4px 10px;
+    border: 1px solid var(--bd2);
+    border-radius: var(--r);
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  header a:hover { color: var(--text); border-color: var(--accent); }
+
+  .last-updated {
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ── Layout ── */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 2px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: var(--surf2);
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--bd);
+  }
+
+  .card-header .icon { font-size: 1rem; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 7px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--bd);
+    background: var(--surf2);
+  }
+
+  thead th.num { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--bd);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+  tbody td {
+    padding: 9px 14px;
+    font-size: 0.88rem;
+  }
+
+  tbody td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  tbody td.rank {
+    color: var(--muted);
+    font-size: 0.8rem;
+    width: 28px;
+  }
+
+  tbody td.num.muted {
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  /* ── Rank badge for top 3 ── */
+  .rank-1 { color: var(--gold) !important; }
+  .rank-2 { color: #c0c0c0 !important; }
+  .rank-3 { color: #cd7f32 !important; }
+
+  /* ── Player name + team ── */
+  .player-name { font-weight: 600; }
+  .team-tag {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+
+  /* ── Flag ── */
+  .fi {
+    width: 20px;
+    height: 15px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .team-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Cards fairplay ── */
+  .yc {
+    display: inline-block;
+    width: 10px; height: 14px;
+    background: #fbbf24;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 2px;
+  }
+
+  .rc {
+    display: inline-block;
+    width: 10px; height: 14px;
+    background: #f87171;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 2px;
+  }
+
+  .cards-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .card-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.88rem;
+  }
+
+  .card-count.yellow { color: #fbbf24; }
+  .card-count.red    { color: #f87171; }
+
+  /* ── Bar chart ── */
+  .bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0.7;
+    min-width: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .bar.defense { background: #60a5fa; }
+
+  .bar-val {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  .bar-val.defense { color: #60a5fa; }
+
+  /* ── Loading/error ── */
+  .loading {
+    padding: 32px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+
+  .error-msg {
+    padding: 16px 14px;
+    color: var(--lv-c);
+    font-size: 0.85rem;
+  }
+
+  /* ── Full-width sections ── */
+  .full-width { grid-column: 1 / -1; }
+
+  /* ── Section group labels ── */
+  .section-group {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 700px) {
+    .page { grid-template-columns: 1fr; }
+    .full-width { grid-column: 1; }
+    .section-group { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.3rem">📊</span>
+  <h1>Statistiques — Coupe du Monde 2026</h1>
+  <div class="nav-links">
+    <a href="index.html">⚽ Matchs</a>
+    <a href="bracket.html">🏆 Tableau</a>
+  </div>
+  <span class="last-updated" id="lastUpdated"></span>
+</header>
+
+<div class="page">
+
+  <!-- ── Joueurs ── -->
+  <div class="section-group">
+    <div class="section-title">Statistiques joueurs</div>
+  </div>
+
+  <div class="card" id="card-scorers">
+    <div class="card-header"><span class="icon">⚽</span> Meilleurs buteurs</div>
+    <div class="loading" id="loading-scorers">Chargement…</div>
+  </div>
+
+  <div class="card" id="card-assists">
+    <div class="card-header"><span class="icon">🎯</span> Meilleurs passeurs décisifs</div>
+    <div class="loading" id="loading-assists">Chargement des summaries…</div>
+  </div>
+
+  <!-- ── Équipes ── -->
+  <div class="section-group">
+    <div class="section-title">Statistiques équipes</div>
+  </div>
+
+  <div class="card" id="card-offense">
+    <div class="card-header"><span class="icon">🔥</span> Meilleures attaques</div>
+    <div class="loading" id="loading-offense">Chargement…</div>
+  </div>
+
+  <div class="card" id="card-defense">
+    <div class="card-header"><span class="icon">🛡️</span> Meilleures défenses</div>
+    <div class="loading" id="loading-defense">Chargement…</div>
+  </div>
+
+  <div class="card full-width" id="card-fairplay">
+    <div class="card-header"><span class="icon">🟨</span> Fair-play — Classement disciplinaire</div>
+    <div class="loading" id="loading-fairplay">Chargement…</div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+// ── Translation helpers ───────────────────────────────────────────────────
+function teamFr(enName) {
+  return TEAM_EN_FR[enName] || enName;
+}
+
+function flagCode(enName) {
+  const fr = teamFr(enName);
+  return FLAG[fr] || null;
+}
+
+function flagHtml(enName) {
+  const code = flagCode(enName);
+  return code ? `<span class="fi fi-${code}"></span>` : '';
+}
+
+// ── Build stats from scoreboard data ─────────────────────────────────────
+function buildStats(data) {
+  const scorers  = {};   // playerId → { name, teamEn, goals }
+  const teamSt   = {};   // teamId  → { nameEn, played, gf, ga, yellow, red }
+
+  for (const ev of (data.events || [])) {
+    const comp = ev.competitions?.[0];
+    if (!comp) continue;
+
+    const stName = comp.status?.type?.name || '';
+    const isDone = stName === 'STATUS_FULL_TIME' || stName === 'STATUS_FINAL';
+
+    // Map teamId → display name
+    const teamNames = {};
+    for (const c of (comp.competitors || [])) {
+      teamNames[c.team.id] = c.team.displayName;
+    }
+
+    // Only accumulate stats for finished matches
+    if (!isDone || comp.competitors?.length !== 2) continue;
+
+    const [t0, t1] = comp.competitors;
+    for (const c of [t0, t1]) {
+      if (!teamSt[c.team.id]) {
+        teamSt[c.team.id] = { nameEn: c.team.displayName, played: 0, gf: 0, ga: 0, yellow: 0, red: 0 };
+      }
+      teamSt[c.team.id].played++;
+      teamSt[c.team.id].gf += parseInt(c.score || 0, 10);
+    }
+    teamSt[t0.team.id].ga += parseInt(t1.score || 0, 10);
+    teamSt[t1.team.id].ga += parseInt(t0.score || 0, 10);
+
+    for (const det of (comp.details || [])) {
+      const athletes = det.athletesInvolved || [];
+      if (!athletes.length) continue;
+      const a = athletes[0];
+      const tid = a.team?.id;
+
+      if (det.scoringPlay && !det.ownGoal && !det.shootout) {
+        if (!scorers[a.id]) scorers[a.id] = { name: a.displayName, teamEn: teamNames[tid] || '', goals: 0 };
+        scorers[a.id].goals++;
+      }
+
+      if (tid && teamSt[tid]) {
+        if (det.yellowCard) teamSt[tid].yellow++;
+        if (det.redCard)    teamSt[tid].red++;
+      }
+    }
+  }
+
+  return { scorers, teamSt };
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────
+function rankClass(i) {
+  return i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+}
+
+function rankSymbol(i) {
+  return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : String(i + 1);
+}
+
+function renderScorers(scorers) {
+  const sorted = Object.values(scorers)
+    .sort((a, b) => b.goals - a.goals)
+    .slice(0, 10);
+
+  if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
+
+  const rows = sorted.map((p, i) => `
+    <tr>
+      <td class="rank ${rankClass(i)}">${rankSymbol(i)}</td>
+      <td>
+        <span class="player-name">${p.name}</span>
+        <span class="team-tag">${flagHtml(p.teamEn)} ${teamFr(p.teamEn)}</span>
+      </td>
+      <td class="num">${p.goals}</td>
+    </tr>`).join('');
+
+  return `
+    <table>
+      <thead><tr><th></th><th>Joueur</th><th class="num">Buts</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderAssists(assists) {
+  const sorted = Object.values(assists)
+    .sort((a, b) => b.assists - a.assists)
+    .slice(0, 10);
+
+  if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
+
+  const rows = sorted.map((p, i) => `
+    <tr>
+      <td class="rank ${rankClass(i)}">${rankSymbol(i)}</td>
+      <td>
+        <span class="player-name">${p.name}</span>
+        <span class="team-tag">${flagHtml(p.teamEn)} ${teamFr(p.teamEn)}</span>
+      </td>
+      <td class="num">${p.assists}</td>
+    </tr>`).join('');
+
+  return `
+    <table>
+      <thead><tr><th></th><th>Joueur</th><th class="num">Passes D.</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderOffense(teamSt) {
+  const sorted = Object.values(teamSt)
+    .filter(t => t.played > 0)
+    .sort((a, b) => b.gf - a.gf || b.gf / b.played - a.gf / a.played)
+    .slice(0, 10);
+
+  if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
+
+  const maxGf = sorted[0].gf || 1;
+
+  const rows = sorted.map((t, i) => {
+    const avg = (t.gf / t.played).toFixed(2);
+    const barW = Math.round((t.gf / maxGf) * 120);
+    return `
+    <tr>
+      <td class="rank ${rankClass(i)}">${rankSymbol(i)}</td>
+      <td><span class="team-cell">${flagHtml(t.nameEn)} ${teamFr(t.nameEn)}</span></td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar" style="width:${barW}px"></div>
+          <span class="bar-val">${t.gf}</span>
+        </div>
+      </td>
+      <td class="num muted">${avg}</td>
+      <td class="num muted" style="color:var(--muted);font-size:0.78rem">${t.played} J</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <table>
+      <thead><tr>
+        <th></th><th>Équipe</th>
+        <th>Buts marqués</th>
+        <th class="num">Moy/match</th>
+        <th class="num">Matchs</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderDefense(teamSt) {
+  const sorted = Object.values(teamSt)
+    .filter(t => t.played > 0)
+    .sort((a, b) => a.ga - b.ga || a.ga / a.played - b.ga / b.played)
+    .slice(0, 10);
+
+  if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
+
+  const maxGa = Math.max(...sorted.map(t => t.ga), 1);
+
+  const rows = sorted.map((t, i) => {
+    const avg = (t.ga / t.played).toFixed(2);
+    const barW = Math.round((t.ga / maxGa) * 120);
+    return `
+    <tr>
+      <td class="rank ${rankClass(i)}">${rankSymbol(i)}</td>
+      <td><span class="team-cell">${flagHtml(t.nameEn)} ${teamFr(t.nameEn)}</span></td>
+      <td>
+        <div class="bar-wrap">
+          <div class="bar defense" style="width:${Math.max(barW, 2)}px"></div>
+          <span class="bar-val defense">${t.ga}</span>
+        </div>
+      </td>
+      <td class="num muted">${avg}</td>
+      <td class="num muted" style="color:var(--muted);font-size:0.78rem">${t.played} J</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <table>
+      <thead><tr>
+        <th></th><th>Équipe</th>
+        <th>Buts encaissés</th>
+        <th class="num">Moy/match</th>
+        <th class="num">Matchs</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderFairplay(teamSt) {
+  // Score FIFA fair-play: yellow=1pt, red=3pts (approx), sort worst → best
+  const sorted = Object.values(teamSt)
+    .filter(t => t.played > 0)
+    .map(t => ({ ...t, score: t.yellow + t.red * 3 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+
+  if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
+
+  const rows = sorted.map((t, i) => {
+    const scoreColor = i < 3 ? 'var(--lv-c)' : i < 6 ? '#fbbf24' : 'var(--accent)';
+    return `
+    <tr>
+      <td class="rank">${i + 1}</td>
+      <td><span class="team-cell">${flagHtml(t.nameEn)} ${teamFr(t.nameEn)}</span></td>
+      <td class="num muted" style="color:var(--muted);font-size:0.78rem">${t.played} J</td>
+      <td>
+        <div class="cards-cell">
+          <span class="card-count yellow"><span class="yc"></span>${t.yellow}</span>
+          <span class="card-count red"><span class="rc"></span>${t.red}</span>
+        </div>
+      </td>
+      <td class="num" style="color:${scoreColor}">${t.score}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <table>
+      <thead><tr>
+        <th></th><th>Équipe</th>
+        <th class="num">Matchs</th>
+        <th class="num">Cartons</th>
+        <th class="num">Score</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="padding:8px 14px;font-size:0.74rem;color:var(--muted)">
+      Score disciplinaire : 1 pt par jaune · 3 pts par rouge. Plus le score est élevé, moins bonne est la discipline.
+    </div>`;
+}
+
+// ── Persistent assists cache (incremental, per event ID) ─────────────────
+// localStorage key: cdm_assists_v1
+// Structure: { processed: Set<string>, assists: { [playerId]: { name, teamEn, assists } } }
+const ASSISTS_KEY = 'cdm_assists_v1';
+
+function loadAssistsCache() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ASSISTS_KEY));
+    if (raw && raw.processed && raw.assists) {
+      return { processed: new Set(raw.processed), assists: raw.assists };
+    }
+  } catch {}
+  localStorage.removeItem(ASSISTS_KEY);
+  return { processed: new Set(), assists: {} };
+}
+
+function saveAssistsCache(processed, assists) {
+  try {
+    localStorage.setItem(ASSISTS_KEY, JSON.stringify({
+      processed: [...processed],
+      assists,
+    }));
+  } catch {}
+}
+
+async function fetchSummary(eventId) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+function parseSummaryAssists(summary, assists) {
+  for (const teamRoster of (summary.rosters || [])) {
+    const teamEn = teamRoster.team?.displayName || '';
+    for (const player of (teamRoster.roster || [])) {
+      const stat = (player.stats || []).find(s => s.name === 'goalAssists');
+      const val  = stat ? stat.value : 0;
+      if (!val) continue;
+      const pid = player.athlete?.id;
+      if (!pid) continue;
+      if (!assists[pid]) {
+        assists[pid] = { name: player.athlete.displayName, teamEn, assists: 0 };
+      }
+      assists[pid].assists += val;
+    }
+  }
+}
+
+async function buildAssistsFromSummaries(finishedEventIds) {
+  const { processed, assists } = loadAssistsCache();
+
+  const newIds = finishedEventIds.filter(id => !processed.has(id));
+
+  if (!newIds.length) return assists;
+
+  // Fetch only new matches, in parallel batches of 8
+  const BATCH = 8;
+  for (let i = 0; i < newIds.length; i += BATCH) {
+    const batch = newIds.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(id => fetchSummary(id)));
+
+    results.forEach((summary, j) => {
+      if (summary) parseSummaryAssists(summary, assists);
+      processed.add(batch[j]); // mark done even on failure to avoid infinite retry
+    });
+
+    // Save after each batch so progress is never lost
+    saveAssistsCache(processed, assists);
+
+    const done = Math.min(i + BATCH, newIds.length);
+    const el = document.getElementById('loading-assists');
+    if (el) el.textContent = `Chargement… ${done}/${newIds.length} nouveau${newIds.length > 1 ? 'x' : ''} match${newIds.length > 1 ? 's' : ''}`;
+  }
+
+  return assists;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────
+async function load() {
+  const data = await fetchEspnData();
+
+  if (!data) {
+    const msg = '<div class="error-msg">Impossible de charger les données ESPN. Vérifiez votre connexion.</div>';
+    ['scorers','assists','offense','defense','fairplay'].forEach(id => {
+      document.getElementById(`loading-${id}`).outerHTML = msg;
+    });
+    return;
+  }
+
+  const { scorers, teamSt } = buildStats(data);
+
+  // Render everything we have immediately
+  document.getElementById('loading-scorers').outerHTML = renderScorers(scorers);
+  document.getElementById('loading-offense').outerHTML = renderOffense(teamSt);
+  document.getElementById('loading-defense').outerHTML = renderDefense(teamSt);
+  document.getElementById('loading-fairplay').outerHTML = renderFairplay(teamSt);
+
+  // Fetch player assists from summaries (slower, separate step)
+  const finishedIds = (data.events || [])
+    .filter(ev => {
+      const st = ev.competitions?.[0]?.status?.type?.name || '';
+      return st === 'STATUS_FULL_TIME' || st === 'STATUS_FINAL';
+    })
+    .map(ev => ev.id);
+
+  const assists = await buildAssistsFromSummaries(finishedIds);
+  document.getElementById('loading-assists').outerHTML = renderAssists(assists);
+
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: 'short'
+  });
+  document.getElementById('lastUpdated').textContent = `Mis à jour : ${fmt.format(now)}`;
+}
+
+load();
+</script>
+</body>
+</html>
