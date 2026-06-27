@@ -55,6 +55,7 @@ python -m http.server 8000
 - `DAYS` / `MONTHS` : tableaux français pour formatage de dates
 - `dayLabel(utc)` : formate en `"Lun 11 juin"` — utilise le locale `en-CA` (format YYYY-MM-DD) puis reconstruit la date UTC pour éviter les dérives de fuseau
 - `timeLabel(utc)` : retourne l'heure française (`"21:00"`) via `Intl.DateTimeFormat` timezone `Europe/Paris`
+- `parseEspnScores(data, opts)` : parse la réponse ESPN en `scoreMap` (clé `ev.id`) ; `opts.includeVenue = true` ajoute le champ `venue` (utilisé par `index.html` uniquement)
 - `fetchEspnData()` : fetch ESPN avec cache `localStorage` clé `cdm_espn` TTL 20 s ; retourne `null` si hors ligne et pas de cache
 
 ESPN URL : `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=200&dates=20260611-20260719`
@@ -100,8 +101,8 @@ activeGroupFilter = null  // nom du groupe filtré ou null
 
 ### Sections JS
 
-- **ESPN** `fetchScores()` : peuple `scoreMap` keyed par `ev.id` ; noms KO via `TEAM_EN_FR[displayName]` ; stade dans `entry.venue`
-- **Classements** `computeStandings()` → `{ groups, h2h }` : calcule pts/GD/GF et confrontations directes par groupe via `scoreMap[m.espnId]` ; `fifaSort(rows, h2hMap)` : tri officiel FIFA WC 2026 — pts global → H2H (pts/GD/GF) → sous-groupes H2H récursifs → GD global → GF global → alpha
+- **ESPN** `fetchScores()` : appelle `parseEspnScores(data, {includeVenue:true})` puis met à jour les noms KO dans `MATCHES` ; peuple `scoreMap` avec `venue`
+- **Classements** `computeStandings()` → `{ groups, h2h }` : memoïsée sur `JSON.stringify(scoreMap)` via `_computeStandingsImpl()` — évite le double calcul avec `computeFrancePos()` ; `fifaSort(rows, h2hMap)` : tri officiel FIFA WC 2026 — pts global → H2H (pts/GD/GF) → sous-groupes H2H récursifs → GD global → GF global → alpha
 - **Rendu classements** `renderStandings()` : 12 tableaux sur 3 colonnes. Top 2 → `.st-q1` (fond doré). Meilleurs 8 troisièmes qualifiés → `.st-q3ok` (fond orange). Groupe I (France) → `.gtable.fr-group`
 - **Filtre groupe** : clic sur l'entête d'un tableau → `toggleGroupFilter(gname)` — filtre les matchs affichés et montre une barre de filtre avec bouton "Tous les matchs"
 - **Logique temporelle** `matchState(m)` → `'live'|'ht'|'ft'|'sched'` : ESPN d'abord, fallback local basé sur l'heure écoulée. `liveLabel(m)` : minute ESPN ou label de mi-temps local (fenêtre 46–62 min)
@@ -143,7 +144,7 @@ Tableau séparé de 32 matchs uniquement (pas de matchs de poule) :
 - 8 matchs `g:"r16"` (8es) — 4 gauche, 4 droite
 - 4 matchs `g:"qf"`, 2 `g:"sf"`, 1 `g:"third"`, 1 `g:"final"`
 
-Même structure que `MATCHES` (espnId, utc, m, g, tv, fr, frIf, final). Noms mis à jour depuis ESPN dès que connus. Le champ `venue` n'est pas présent dans le `scoreMap` de `bracket.html`.
+Champs : `espnId, utc, m, g, tv, final`. Pas de `frIf` ni de `fr` hardcodé. Noms mis à jour depuis ESPN dès que connus. Le champ `venue` n'est pas présent dans le `scoreMap` de `bracket.html`.
 
 ### State
 
@@ -180,7 +181,7 @@ Cap à 1.1. Recalculé au `resize`. Les connecteurs SVG sont redessinés après 
 
 ### France KO
 
-`updateFranceKoFlags()` lit `localStorage('cdm_fr_pos')` (écrit par `index.html`) et met à jour `m.fr` via `frIf`. Appelé avant chaque `render()`. Si `pos` est vide/null, tous les matchs avec `frIf` sont allumés.
+La mise en évidence France dans `bracket.html` est détectée directement depuis ESPN : `hasFrance = s && (s.hname === 'France' || s.aname === 'France')` dans `cardHtml()`. Il n'y a pas de `updateFranceKoFlags()` ni de lecture de `localStorage` dans ce fichier.
 
 ## Conventions
 
