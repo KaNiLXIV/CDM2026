@@ -20,6 +20,9 @@
     --lv-bd:   #f87171;
     --lv-c:    #f87171;
     --gold:    #fbbf24;
+    --bronze:  #cd7f32;
+    --fr-bg:   rgba(0,35,149,0.15);
+    --fr-bd:   #002395;
     --m6-bg:   rgba(74,222,128,0.12);
     --m6-tx:   #86efac;
     --r:       6px;
@@ -164,8 +167,10 @@
   }
   .bm:hover { border-color: var(--bd3); background: var(--surf2); }
 
-  .bm.lv  { border-color: var(--lv-bd); }
-  .bm.fn  { border-color: var(--gold); background: rgba(251,191,36,0.05); }
+  .bm.lv     { border-color: var(--lv-bd); }
+  .bm.fr     { border-color: var(--fr-bd); background: var(--fr-bg); }
+  .bm.third  { border-color: var(--bronze); background: rgba(205,127,50,0.07); }
+  .bm.fn     { border-color: var(--gold); background: rgba(251,191,36,0.05); }
 
   .bm-head {
     display: flex;
@@ -249,7 +254,8 @@
 
   <div class="legend-bar">
     <div class="legend-item"><div class="legend-dot" style="background:var(--lv-c)"></div>En cours</div>
-
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fr-bd)"></div>France</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--bronze)"></div>3e place</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Finale</div>
   </div>
 
@@ -475,7 +481,8 @@ function cardHtml(m) {
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
-  const cls = ['bm', isLv ? 'lv' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
+  const hasFrance = s && (s.hname === 'France' || s.aname === 'France');
+  const cls = ['bm', isLv ? 'lv' : '', hasFrance ? 'fr' : '', m.g === 'third' ? 'third' : '', m.final ? 'fn' : ''].filter(Boolean).join(' ');
 
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
@@ -621,7 +628,6 @@ function drawConnectors() {
 // ── Init ──────────────────────────────────────────────────────────────────
 async function refresh() {
   await fetchScores();
-
   render();
   const hasLive = MATCHES_KO.some(m => {
     const s = scoreMap[m.espnId];
