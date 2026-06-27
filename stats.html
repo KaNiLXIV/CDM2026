@@ -316,7 +316,7 @@
 
   <div class="card" id="card-assists">
     <div class="card-header"><span class="icon">🎯</span> Meilleurs passeurs décisifs</div>
-    <div class="loading" id="loading-assists">Chargement…</div>
+    <div class="loading" id="loading-assists">Chargement des summaries…</div>
   </div>
 
   <!-- ── Équipes ── -->
@@ -446,51 +446,26 @@ function renderScorers(scorers) {
     </table>`;
 }
 
-function renderAssists(data) {
-  // Assists come from ESPN leaders API; try to parse if available
-  // The scoreboard details only carry the scorer, not the assistant
-  // We surface team-level assist counts as a fallback from competitor statistics
-  const assistMap = {};
-
-  for (const ev of (data.events || [])) {
-    const comp = ev.competitions?.[0];
-    if (!comp) continue;
-    const stName = comp.status?.type?.name || '';
-    const isDone = stName === 'STATUS_FULL_TIME' || stName === 'STATUS_FINAL';
-    if (!isDone) continue;
-
-    for (const c of (comp.competitors || [])) {
-      const stat = c.statistics?.find(s => s.name === 'goalAssists');
-      const val  = stat ? parseInt(stat.displayValue, 10) : 0;
-      if (!val) continue;
-      const tid = c.team.id;
-      if (!assistMap[tid]) assistMap[tid] = { nameEn: c.team.displayName, assists: 0 };
-      assistMap[tid].assists += val;
-    }
-  }
-
-  const sorted = Object.values(assistMap)
+function renderAssists(assists) {
+  const sorted = Object.values(assists)
     .sort((a, b) => b.assists - a.assists)
     .slice(0, 10);
 
   if (!sorted.length) return '<div class="error-msg">Aucune donnée disponible.</div>';
 
-  const note = `<div style="padding:8px 14px 4px;font-size:0.75rem;color:var(--muted)">
-    Les passes décisives ESPN sont agrégées par équipe (détail individuel non disponible dans ce flux).
-  </div>`;
-
-  const rows = sorted.map((t, i) => `
+  const rows = sorted.map((p, i) => `
     <tr>
       <td class="rank ${rankClass(i)}">${rankSymbol(i)}</td>
       <td>
-        <span class="team-cell">${flagHtml(t.nameEn)} ${teamFr(t.nameEn)}</span>
+        <span class="player-name">${p.name}</span>
+        <span class="team-tag">${flagHtml(p.teamEn)} ${teamFr(p.teamEn)}</span>
       </td>
-      <td class="num">${t.assists}</td>
+      <td class="num">${p.assists}</td>
     </tr>`).join('');
 
-  return note + `
+  return `
     <table>
-      <thead><tr><th></th><th>Équipe</th><th class="num">Passes D.</th></tr></thead>
+      <thead><tr><th></th><th>Joueur</th><th class="num">Passes D.</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
@@ -617,6 +592,77 @@ function renderFairplay(teamSt) {
     </div>`;
 }
 
+// ── Fetch player assists from summary endpoints ───────────────────────────
+const SUMMARY_CACHE_KEY = 'cdm_summaries';
+const SUMMARY_TTL = 5 * 60 * 1000; // 5 min
+
+async function fetchSummary(eventId) {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+async function buildAssistsFromSummaries(finishedEventIds) {
+  // Cache summaries in localStorage to avoid re-fetching on reload
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(SUMMARY_CACHE_KEY)); } catch {}
+  if (cached && Date.now() - cached.ts < SUMMARY_TTL &&
+      cached.ids === finishedEventIds.join(',')) {
+    return cached.assists;
+  }
+
+  // Fetch all summaries in parallel batches of 10
+  const BATCH = 10;
+  const assists = {};
+
+  for (let i = 0; i < finishedEventIds.length; i += BATCH) {
+    const batch = finishedEventIds.slice(i, i + BATCH);
+    const results = await Promise.all(batch.map(id => fetchSummary(id)));
+
+    for (const summary of results) {
+      if (!summary) continue;
+      for (const teamRoster of (summary.rosters || [])) {
+        const teamEn = teamRoster.team?.displayName || '';
+        for (const player of (teamRoster.roster || [])) {
+          const stat = (player.stats || []).find(s => s.name === 'goalAssists');
+          const val  = stat ? stat.value : 0;
+          if (!val) continue;
+          const pid = player.athlete?.id;
+          if (!pid) continue;
+          if (!assists[pid]) {
+            assists[pid] = {
+              name:   player.athlete.displayName,
+              teamEn: teamEn,
+              assists: 0,
+            };
+          }
+          assists[pid].assists += val;
+        }
+      }
+    }
+
+    // Update loading label with progress
+    const pct = Math.min(Math.round(((i + BATCH) / finishedEventIds.length) * 100), 100);
+    const el = document.getElementById('loading-assists');
+    if (el) el.textContent = `Chargement des summaries… ${pct}%`;
+  }
+
+  try {
+    localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      ids: finishedEventIds.join(','),
+      assists,
+    }));
+  } catch {}
+
+  return assists;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────
 async function load() {
   const data = await fetchEspnData();
@@ -631,11 +677,22 @@ async function load() {
 
   const { scorers, teamSt } = buildStats(data);
 
+  // Render everything we have immediately
   document.getElementById('loading-scorers').outerHTML = renderScorers(scorers);
-  document.getElementById('loading-assists').outerHTML = renderAssists(data);
   document.getElementById('loading-offense').outerHTML = renderOffense(teamSt);
   document.getElementById('loading-defense').outerHTML = renderDefense(teamSt);
   document.getElementById('loading-fairplay').outerHTML = renderFairplay(teamSt);
+
+  // Fetch player assists from summaries (slower, separate step)
+  const finishedIds = (data.events || [])
+    .filter(ev => {
+      const st = ev.competitions?.[0]?.status?.type?.name || '';
+      return st === 'STATUS_FULL_TIME' || st === 'STATUS_FINAL';
+    })
+    .map(ev => ev.id);
+
+  const assists = await buildAssistsFromSummaries(finishedIds);
+  document.getElementById('loading-assists').outerHTML = renderAssists(assists);
 
   const now = new Date();
   const fmt = new Intl.DateTimeFormat('fr-FR', {
