@@ -592,9 +592,29 @@ function renderFairplay(teamSt) {
     </div>`;
 }
 
-// ── Fetch player assists from summary endpoints ───────────────────────────
-const SUMMARY_CACHE_KEY = 'cdm_summaries';
-const SUMMARY_TTL = 5 * 60 * 1000; // 5 min
+// ── Persistent assists cache (incremental, per event ID) ─────────────────
+// localStorage key: cdm_assists_v1
+// Structure: { processed: Set<string>, assists: { [playerId]: { name, teamEn, assists } } }
+const ASSISTS_KEY = 'cdm_assists_v1';
+
+function loadAssistsCache() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ASSISTS_KEY));
+    if (raw && raw.processed && raw.assists) {
+      return { processed: new Set(raw.processed), assists: raw.assists };
+    }
+  } catch {}
+  return { processed: new Set(), assists: {} };
+}
+
+function saveAssistsCache(processed, assists) {
+  try {
+    localStorage.setItem(ASSISTS_KEY, JSON.stringify({
+      processed: [...processed],
+      assists,
+    }));
+  } catch {}
+}
 
 async function fetchSummary(eventId) {
   const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=${eventId}`;
@@ -607,58 +627,49 @@ async function fetchSummary(eventId) {
   }
 }
 
-async function buildAssistsFromSummaries(finishedEventIds) {
-  // Cache summaries in localStorage to avoid re-fetching on reload
-  let cached = null;
-  try { cached = JSON.parse(localStorage.getItem(SUMMARY_CACHE_KEY)); } catch {}
-  if (cached && Date.now() - cached.ts < SUMMARY_TTL &&
-      cached.ids === finishedEventIds.join(',')) {
-    return cached.assists;
+function parseSummaryAssists(summary, assists) {
+  for (const teamRoster of (summary.rosters || [])) {
+    const teamEn = teamRoster.team?.displayName || '';
+    for (const player of (teamRoster.roster || [])) {
+      const stat = (player.stats || []).find(s => s.name === 'goalAssists');
+      const val  = stat ? stat.value : 0;
+      if (!val) continue;
+      const pid = player.athlete?.id;
+      if (!pid) continue;
+      if (!assists[pid]) {
+        assists[pid] = { name: player.athlete.displayName, teamEn, assists: 0 };
+      }
+      assists[pid].assists += val;
+    }
   }
+}
 
-  // Fetch all summaries in parallel batches of 10
-  const BATCH = 10;
-  const assists = {};
+async function buildAssistsFromSummaries(finishedEventIds) {
+  const { processed, assists } = loadAssistsCache();
 
-  for (let i = 0; i < finishedEventIds.length; i += BATCH) {
-    const batch = finishedEventIds.slice(i, i + BATCH);
+  const newIds = finishedEventIds.filter(id => !processed.has(id));
+
+  if (!newIds.length) return assists;
+
+  // Fetch only new matches, in parallel batches of 8
+  const BATCH = 8;
+  for (let i = 0; i < newIds.length; i += BATCH) {
+    const batch = newIds.slice(i, i + BATCH);
     const results = await Promise.all(batch.map(id => fetchSummary(id)));
 
-    for (const summary of results) {
-      if (!summary) continue;
-      for (const teamRoster of (summary.rosters || [])) {
-        const teamEn = teamRoster.team?.displayName || '';
-        for (const player of (teamRoster.roster || [])) {
-          const stat = (player.stats || []).find(s => s.name === 'goalAssists');
-          const val  = stat ? stat.value : 0;
-          if (!val) continue;
-          const pid = player.athlete?.id;
-          if (!pid) continue;
-          if (!assists[pid]) {
-            assists[pid] = {
-              name:   player.athlete.displayName,
-              teamEn: teamEn,
-              assists: 0,
-            };
-          }
-          assists[pid].assists += val;
-        }
-      }
-    }
+    results.forEach((summary, j) => {
+      if (!summary) return;
+      parseSummaryAssists(summary, assists);
+      processed.add(batch[j]);
+    });
 
-    // Update loading label with progress
-    const pct = Math.min(Math.round(((i + BATCH) / finishedEventIds.length) * 100), 100);
+    // Save after each batch so progress is never lost
+    saveAssistsCache(processed, assists);
+
+    const done = Math.min(i + BATCH, newIds.length);
     const el = document.getElementById('loading-assists');
-    if (el) el.textContent = `Chargement des summaries… ${pct}%`;
+    if (el) el.textContent = `Chargement… ${done}/${newIds.length} nouveau${newIds.length > 1 ? 'x' : ''} match${newIds.length > 1 ? 's' : ''}`;
   }
-
-  try {
-    localStorage.setItem(SUMMARY_CACHE_KEY, JSON.stringify({
-      ts: Date.now(),
-      ids: finishedEventIds.join(','),
-      assists,
-    }));
-  } catch {}
 
   return assists;
 }
