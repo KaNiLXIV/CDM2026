@@ -601,9 +601,8 @@ function loadAssistsCache() {
     if (raw && raw.processed && raw.assists) {
       return { processed: new Set(raw.processed), assists: raw.assists };
     }
-  } catch {
-    localStorage.removeItem(ASSISTS_KEY);
-  }
+  } catch {}
+  localStorage.removeItem(ASSISTS_KEY);
   return { processed: new Set(), assists: {} };
 }
 
