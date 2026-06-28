@@ -443,9 +443,9 @@ function cardHtml(m) {
     const code  = FLAG[name];
     const flag  = code ? `<span class="fi fi-${code}"></span>` : '';
     const isTbd = !hasTeams || parts.length < 2;
-    const tname = isTbd
-      ? `<span class="bm-tname ko">${name}</span>`
-      : `<span class="bm-tname">${name}</span>`;
+    const nameCls = isTbd ? 'ko'
+      : (isFT && score !== null && score < other ? 'ko' : '');
+    const tname = `<span class="bm-tname${nameCls ? ' ' + nameCls : ''}">${name}</span>`;
     const sc = score !== null ? scoreWin(score, other) : '';
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
