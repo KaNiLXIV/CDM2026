@@ -182,7 +182,7 @@
   .bm-date         { font-size: 9.5px; color: var(--muted); white-space: nowrap; }
   .bm-status-live  { font-size: 9.5px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
   .bm-status-ft    { font-size: 9.5px; color: var(--muted); letter-spacing: .02em; }
-  .bm-tab-score    { font-size: 9.5px; color: var(--muted); }
+  .bm-tscore-so    { font-size: 10px; font-weight: 600; color: var(--muted); margin-left: 1px; }
   .bm-badge-m6     { font-size: 8px; padding: 1px 4px; border-radius: 20px; font-weight: 600;
                      background: var(--m6-bg); color: var(--m6-tx); }
 
@@ -415,10 +415,11 @@ function cardHtml(m) {
   let hs = null, as_ = null;
   if (s && s.hs !== null && s.hs !== '' && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
 
-  const scoreWin = (score, other) => {
+  const scoreWin = (score, other, so) => {
     if (score === null) return '';
     const cls = isLv ? 'lv' : (isFT && score > other ? 'win' : '');
-    return `<span class="bm-tscore ${cls}">${score}</span>`;
+    const soHtml = so !== null && so !== undefined ? `<span class="bm-tscore-so">(${so})</span>` : '';
+    return `<span class="bm-tscore ${cls}">${score}</span>${soHtml}`;
   };
 
   // Date avant l'heure
@@ -435,13 +436,15 @@ function cardHtml(m) {
   } else if (isFT) {
     const extra = s?.extra;
     const ftLabel = extra === 'tab' ? 'TAB' : extra === 'aet' ? 'AP' : 'FT';
-    const tabScore = extra === 'tab' && s?.hso !== null && s?.aso !== null
-      ? ` <span class="bm-tab-score">(${s.hso}-${s.aso})</span>` : '';
-    badgeHtml = `<span class="bm-status-ft">${ftLabel}</span>${tabScore}`;
+    badgeHtml = `<span class="bm-status-ft">${ftLabel}</span>`;
   }
   if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
 
-  function teamRow(name, score, other) {
+  const hasTab = isFT && s?.extra === 'tab' && s?.hso !== null && s?.hso !== undefined && s?.aso !== null && s?.aso !== undefined;
+  const hso = hasTab ? s.hso : null;
+  const aso = hasTab ? s.aso : null;
+
+  function teamRow(name, score, other, so) {
     if (!name) return '';
     const code  = FLAG[name];
     const flag  = code ? `<span class="fi fi-${code}"></span>` : '';
@@ -449,7 +452,7 @@ function cardHtml(m) {
     const nameCls = isTbd ? 'ko'
       : (isFT && score !== null && score < other ? 'ko' : '');
     const tname = `<span class="bm-tname${nameCls ? ' ' + nameCls : ''}">${name}</span>`;
-    const sc = score !== null ? scoreWin(score, other) : '';
+    const sc = score !== null ? scoreWin(score, other, so) : '';
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
@@ -459,8 +462,8 @@ function cardHtml(m) {
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
     <div class="bm-teams">
-      ${teamRow(ta, hs, as_)}
-      ${tb ? teamRow(tb, as_, hs) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
+      ${teamRow(ta, hs, as_, hso)}
+      ${tb ? teamRow(tb, as_, hs, aso) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
     </div>
   </div>`;
 }
