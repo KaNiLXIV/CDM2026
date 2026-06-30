@@ -415,9 +415,18 @@ function cardHtml(m) {
   let hs = null, as_ = null;
   if (s && s.hs !== null && s.hs !== '' && (isLv || isFT)) { hs = s.hs; as_ = s.as; }
 
-  const scoreWin = (score, other, so) => {
+  const wins = (score, other, so, otherSo) => {
+    if (so !== null && so !== undefined) return so > otherSo;
+    return score !== other && score > other;
+  };
+  const loses = (score, other, so, otherSo) => {
+    if (so !== null && so !== undefined) return so < otherSo;
+    return score !== other && score < other;
+  };
+
+  const scoreWin = (score, other, so, otherSo) => {
     if (score === null) return '';
-    const cls = isLv ? 'lv' : (isFT && score > other ? 'win' : '');
+    const cls = isLv ? 'lv' : (isFT && wins(score, other, so, otherSo) ? 'win' : '');
     const soHtml = so !== null && so !== undefined ? `<span class="bm-tscore-so">(${so})</span>` : '';
     return `<span class="bm-tscore ${cls}">${score}</span>${soHtml}`;
   };
@@ -444,15 +453,15 @@ function cardHtml(m) {
   const hso = hasTab ? s.hso : null;
   const aso = hasTab ? s.aso : null;
 
-  function teamRow(name, score, other, so) {
+  function teamRow(name, score, other, so, otherSo) {
     if (!name) return '';
     const code  = FLAG[name];
     const flag  = code ? `<span class="fi fi-${code}"></span>` : '';
     const isTbd = !hasTeams || parts.length < 2;
     const nameCls = isTbd ? 'ko'
-      : (isFT && score !== null && score < other ? 'ko' : '');
+      : (isFT && score !== null && loses(score, other, so, otherSo) ? 'ko' : '');
     const tname = `<span class="bm-tname${nameCls ? ' ' + nameCls : ''}">${name}</span>`;
-    const sc = score !== null ? scoreWin(score, other, so) : '';
+    const sc = score !== null ? scoreWin(score, other, so, otherSo) : '';
     return `<div class="bm-team">${flag}${tname}${sc}</div>`;
   }
 
@@ -462,8 +471,8 @@ function cardHtml(m) {
   return `<div class="${cls}" data-utc="${m.utc}">
     <div class="bm-head">${statusHtml}${badgeHtml}</div>
     <div class="bm-teams">
-      ${teamRow(ta, hs, as_, hso)}
-      ${tb ? teamRow(tb, as_, hs, aso) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
+      ${teamRow(ta, hs, as_, hso, aso)}
+      ${tb ? teamRow(tb, as_, hs, aso, hso) : `<div class="bm-team"><span class="bm-tname ko">À déterminer</span></div>`}
     </div>
   </div>`;
 }
