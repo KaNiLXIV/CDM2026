@@ -77,16 +77,17 @@ function parseEspnScores(data, opts = {}) {
     const isLv   = sn === 'STATUS_IN_PROGRESS';
     const isHT   = sn === 'STATUS_HALFTIME';
     const isEOP  = sn === 'STATUS_END_OF_PERIOD';
-    // Le tirage au but reste en "STATUS_SHOOTOUT" même une fois terminé (completed: true) :
-    // sans le flag completed, ces matchs ne basculent jamais en "terminé".
+    // Tirage au but en cours : ESPN utilise "STATUS_SHOOTOUT" (non terminé). Une fois le
+    // tirage achevé, le statut bascule en "STATUS_FINAL_PEN" (et non STATUS_FULL_TIME/FINAL) :
+    // sans ce cas, ces matchs ne basculaient jamais vers l'état "terminé".
     const isTAB  = sn === 'STATUS_SHOOTOUT' && !completed;
-    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || (sn === 'STATUS_SHOOTOUT' && completed);
+    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || sn === 'STATUS_FINAL_PEN' || (sn === 'STATUS_SHOOTOUT' && completed);
     const isET   = isLv && period >= 3;
     const home = comp.competitors?.find(c => c.homeAway === 'home');
     const away = comp.competitors?.find(c => c.homeAway === 'away');
     let extra = null;
     if (isFT) {
-      if (sn === 'STATUS_SHOOTOUT' || detail.includes('pen') || detail.includes('tab')) extra = 'tab';
+      if (sn === 'STATUS_FINAL_PEN' || sn === 'STATUS_SHOOTOUT' || detail.includes('pen') || detail.includes('tab')) extra = 'tab';
       else if (detail === 'aet' || period > 2) extra = 'aet';
     }
     const entry = {
