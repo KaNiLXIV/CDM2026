@@ -70,25 +70,30 @@ function parseEspnScores(data, opts = {}) {
   (data.events || []).forEach(ev => {
     const comp = ev.competitions?.[0];
     if (!comp) return;
-    const sn     = comp.status?.type?.name || '';
-    const period = comp.status?.period || 0;
-    const detail = (comp.status?.type?.shortDetail || '').toLowerCase();
+    const sn        = comp.status?.type?.name || '';
+    const completed = !!comp.status?.type?.completed;
+    const period    = comp.status?.period || 0;
+    const detail    = (comp.status?.type?.shortDetail || '').toLowerCase();
     const isLv   = sn === 'STATUS_IN_PROGRESS';
     const isHT   = sn === 'STATUS_HALFTIME';
     const isEOP  = sn === 'STATUS_END_OF_PERIOD';
-    const isTAB  = sn === 'STATUS_SHOOTOUT';
-    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL';
+    // Le tirage au but reste en "STATUS_SHOOTOUT" même une fois terminé (completed: true) :
+    // sans le flag completed, ces matchs ne basculent jamais en "terminé".
+    const isTAB  = sn === 'STATUS_SHOOTOUT' && !completed;
+    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || (sn === 'STATUS_SHOOTOUT' && completed);
     const isET   = isLv && period >= 3;
     const home = comp.competitors?.find(c => c.homeAway === 'home');
     const away = comp.competitors?.find(c => c.homeAway === 'away');
     let extra = null;
     if (isFT) {
-      if (detail.includes('pen') || detail.includes('tab')) extra = 'tab';
+      if (sn === 'STATUS_SHOOTOUT' || detail.includes('pen') || detail.includes('tab')) extra = 'tab';
       else if (detail === 'aet' || period > 2) extra = 'aet';
     }
     const entry = {
       hs:    home?.score ?? null,
       as:    away?.score ?? null,
+      hso:   home?.shootoutScore ?? null,
+      aso:   away?.shootoutScore ?? null,
       st:    isTAB ? 'tab' : isET ? 'et' : isEOP ? 'et_ht' : isLv ? 'live' : isHT ? 'ht' : isFT ? 'ft' : 'sched',
       min:   isHT ? 'MT' : isEOP ? 'MT p.sup.' : isTAB ? 'TAB' : (comp.status?.displayClock || ''),
       period,

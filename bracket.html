@@ -182,6 +182,7 @@
   .bm-date         { font-size: 9.5px; color: var(--muted); white-space: nowrap; }
   .bm-status-live  { font-size: 9.5px; font-weight: 700; color: var(--lv-c); letter-spacing: .04em; }
   .bm-status-ft    { font-size: 9.5px; color: var(--muted); letter-spacing: .02em; }
+  .bm-tab-score    { font-size: 9.5px; color: var(--muted); }
   .bm-badge-m6     { font-size: 8px; padding: 1px 4px; border-radius: 20px; font-weight: 600;
                      background: var(--m6-bg); color: var(--m6-tx); }
 
@@ -434,7 +435,9 @@ function cardHtml(m) {
   } else if (isFT) {
     const extra = s?.extra;
     const ftLabel = extra === 'tab' ? 'TAB' : extra === 'aet' ? 'AP' : 'FT';
-    badgeHtml = `<span class="bm-status-ft">${ftLabel}</span>`;
+    const tabScore = extra === 'tab' && s?.hso !== null && s?.aso !== null
+      ? ` <span class="bm-tab-score">(${s.hso}-${s.aso})</span>` : '';
+    badgeHtml = `<span class="bm-status-ft">${ftLabel}</span>${tabScore}`;
   }
   if (m.tv === 'm6' && !isFT && !isLv) badgeHtml = `<span class="bm-badge-m6">M6</span>`;
 

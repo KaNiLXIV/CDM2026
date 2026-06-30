@@ -220,6 +220,7 @@
   .badge-fin  { background: rgba(240,192,64,.15); color: var(--gold); }
 
   .score-mid { font-size: 13px; font-weight: 700; color: var(--text); background: rgba(255,255,255,0.09); padding: 1px 7px; border-radius: 4px; }
+  .tab-score { font-size: 10px; font-weight: 600; color: var(--muted); }
 
   /* ── Classements ── */
   .standings-label {
@@ -746,7 +747,13 @@ const SCORE_STATES = new Set(['ft','live','ht','et','et_ht','tab']);
 function scoreLabel(m) {
   const s = scoreMap[m.espnId];
   if (!s || s.hs === null || s.hs === '') return '';
-  if (SCORE_STATES.has(matchState(m))) return `${s.hs}–${s.as}`;
+  if (SCORE_STATES.has(matchState(m))) {
+    const base = `${s.hs}–${s.as}`;
+    if (s.extra === 'tab' && s.hso !== null && s.aso !== null) {
+      return `${base}<span class="tab-score"> (tab ${s.hso}-${s.aso})</span>`;
+    }
+    return base;
+  }
   return '';
 }
 
