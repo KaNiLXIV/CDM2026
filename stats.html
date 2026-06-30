@@ -368,7 +368,9 @@ function buildStats(data) {
     if (!comp) continue;
 
     const stName = comp.status?.type?.name || '';
-    const isDone = stName === 'STATUS_FULL_TIME' || stName === 'STATUS_FINAL';
+    const completed = !!comp.status?.type?.completed;
+    const isDone = stName === 'STATUS_FULL_TIME' || stName === 'STATUS_FINAL'
+      || stName === 'STATUS_FINAL_PEN' || (stName === 'STATUS_SHOOTOUT' && completed);
 
     // Map teamId → display name
     const teamNames = {};
@@ -695,8 +697,10 @@ async function load() {
   // Fetch player assists from summaries (slower, separate step)
   const finishedIds = (data.events || [])
     .filter(ev => {
-      const st = ev.competitions?.[0]?.status?.type?.name || '';
-      return st === 'STATUS_FULL_TIME' || st === 'STATUS_FINAL';
+      const type = ev.competitions?.[0]?.status?.type || {};
+      const st = type.name || '';
+      return st === 'STATUS_FULL_TIME' || st === 'STATUS_FINAL'
+        || st === 'STATUS_FINAL_PEN' || (st === 'STATUS_SHOOTOUT' && !!type.completed);
     })
     .map(ev => ev.id);
 
