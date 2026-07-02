@@ -76,12 +76,17 @@ function parseEspnScores(data, opts = {}) {
     const detail    = (comp.status?.type?.shortDetail || '').toLowerCase();
     const isLv   = sn === 'STATUS_IN_PROGRESS';
     const isHT   = sn === 'STATUS_HALFTIME';
-    const isEOP  = sn === 'STATUS_END_OF_PERIOD';
+    // "STATUS_END_OF_PERIOD" sert normalement de pause entre les deux mi-temps de la
+    // prolongation, mais ESPN réutilise aussi ce statut (avec completed:true) pour un match
+    // qui se termine à 120' sans tirage au but — comme pour STATUS_SHOOTOUT, il faut donc
+    // vérifier `completed` pour ne pas laisser ces matchs bloqués en "live".
+    const isEOP  = sn === 'STATUS_END_OF_PERIOD' && !completed;
     // Tirage au but en cours : ESPN utilise "STATUS_SHOOTOUT" (non terminé). Une fois le
     // tirage achevé, le statut bascule en "STATUS_FINAL_PEN" (et non STATUS_FULL_TIME/FINAL) :
     // sans ce cas, ces matchs ne basculaient jamais vers l'état "terminé".
     const isTAB  = sn === 'STATUS_SHOOTOUT' && !completed;
-    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || sn === 'STATUS_FINAL_PEN' || (sn === 'STATUS_SHOOTOUT' && completed);
+    const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || sn === 'STATUS_FINAL_PEN'
+      || (sn === 'STATUS_SHOOTOUT' && completed) || (sn === 'STATUS_END_OF_PERIOD' && completed);
     const isET   = isLv && period >= 3;
     const home = comp.competitors?.find(c => c.homeAway === 'home');
     const away = comp.competitors?.find(c => c.homeAway === 'away');
