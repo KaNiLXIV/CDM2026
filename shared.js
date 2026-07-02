@@ -85,7 +85,9 @@ function parseEspnScores(data, opts = {}) {
     // tirage achevé, le statut bascule en "STATUS_FINAL_PEN" (et non STATUS_FULL_TIME/FINAL) :
     // sans ce cas, ces matchs ne basculaient jamais vers l'état "terminé".
     const isTAB  = sn === 'STATUS_SHOOTOUT' && !completed;
+    // "STATUS_FINAL_AET" : match terminé à l'issue de la prolongation, sans tirage au but.
     const isFT   = sn === 'STATUS_FULL_TIME' || sn === 'STATUS_FINAL' || sn === 'STATUS_FINAL_PEN'
+      || sn === 'STATUS_FINAL_AET'
       || (sn === 'STATUS_SHOOTOUT' && completed) || (sn === 'STATUS_END_OF_PERIOD' && completed);
     const isET   = isLv && period >= 3;
     const home = comp.competitors?.find(c => c.homeAway === 'home');
