@@ -60,6 +60,7 @@
   }
 
   .header-left { display: flex; align-items: center; gap: 1rem; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
   .back-link {
     font-size: 12px;
@@ -250,7 +251,10 @@
         <h1>Tableau de la phase finale</h1>
       </div>
     </div>
-    <span id="stime"></span>
+    <div class="header-right">
+      <span id="stime"></span>
+      <a href="stats.html" class="back-link">📊 Stats</a>
+    </div>
   </header>
 
   <div class="legend-bar">
